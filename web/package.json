@@ -20,7 +20,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "build:dev": "env-cmd -f .env.development npm run build && firebase deploy -P dev",
+    "build:prod": "env-cmd -f .env.production npm run build && firebase deploy -P prod"
   },
   "eslintConfig": {
     "extends": [
@@ -42,6 +44,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.14",
+    "env-cmd": "^10.1.0",
     "postcss": "^8.4.26",
     "tailwindcss": "^3.3.3"
   }

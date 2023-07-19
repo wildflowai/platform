@@ -4,7 +4,4 @@
 
 This should open http://localhost:3000 in the browser.
 
-2. To deploy, update firebase config for your project and then run
-
-- `npm run build` and
-- `firebase deploy` for prod deployment.
+2. To deploy, update firebase config for your project and then run `npm run build:prod`.

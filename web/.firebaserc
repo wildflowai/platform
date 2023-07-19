@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "wildflow-demo"
-  }
+    "default": "wildflow-demo",
+    "prod": "wildflow-demo"
+  },
+  "targets": {},
+  "etags": {}
 }
