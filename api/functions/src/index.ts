@@ -1,8 +1,11 @@
 import * as functions from "firebase-functions";
 import { BigQuery } from "@google-cloud/bigquery";
 import * as cors from "cors";
+import * as fs from "fs";
+import * as path from "path";
 
 const corsHandler = cors({ origin: true });
+const bigquery = new BigQuery();
 
 export const listDatasets = functions.https.onRequest((req, res) => {
   corsHandler(req, res, async () => {
@@ -14,7 +17,7 @@ export const listDatasets = functions.https.onRequest((req, res) => {
     }
 
     try {
-      const [tables] = await new BigQuery().dataset("clean").getTables();
+      const [tables] = await bigquery.dataset("clean").getTables();
       const tableInfos = await Promise.all(
         tables.map(async (table: any) => {
           const metadata = await table.getMetadata();
@@ -30,6 +33,41 @@ export const listDatasets = functions.https.onRequest((req, res) => {
     } catch (error) {
       console.error("Failed to get tables:", error);
       res.status(500).send({ error: "Failed to get tables from BigQuery." });
+    }
+  });
+});
+
+export const getWeeklyCounts = functions.https.onRequest((req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== "GET") {
+      res.status(405).send({
+        error: "Invalid request method. Only GET requests are allowed.",
+      });
+      return;
+    }
+
+    const gbifIds = req.query.gbifIds
+      ? Array.isArray(req.query.gbifIds)
+        ? req.query.gbifIds.map(Number)
+        : [Number(req.query.gbifIds)]
+      : [278557222];
+
+    if (!gbifIds.every(Number.isInteger)) {
+      res.status(400).send({
+        error: "Invalid GBIF IDs. GBIF IDs should be integers.",
+      });
+      return;
+    }
+
+    try {
+      const queryFilePath = path.resolve(__dirname, "weeklyCountsQuery.sql");
+      let query = fs.readFileSync(queryFilePath, "utf8");
+      query = query.replace("__GBIF_IDS__", gbifIds.join(","));
+      const [rows] = await bigquery.query(query);
+      res.status(200).send(rows);
+    } catch (error) {
+      console.error("Failed to query data:", error);
+      res.status(500).send({ error: "Failed to query data from BigQuery." });
     }
   });
 });
