@@ -26,7 +26,7 @@ const App: React.FC = () => {
         <div className="flex">
           <Sidebar />
           <div
-            className={`flex flex-grow ${
+            className={`flex flex-grow flex-shrink ${
               darkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"
             } transition-all duration-200 ease-in-out`}
           >

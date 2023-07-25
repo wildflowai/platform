@@ -1,6 +1,6 @@
 SELECT
   organism.gbif_id,
-  TIMESTAMP_TRUNC(timestamp, DAY) AS day_start,
+  TIMESTAMP_TRUNC(timestamp, WEEK(MONDAY)) AS day_start,
   location.lat,
   location.lon,
   AVG(metadata.individualCount) AS mean_count

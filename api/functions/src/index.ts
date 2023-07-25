@@ -37,7 +37,7 @@ export const listDatasets = functions.https.onRequest((req, res) => {
   });
 });
 
-export const getWeeklyCounts = functions.https.onRequest((req, res) => {
+export const getPopulationCounts = functions.https.onRequest((req, res) => {
   corsHandler(req, res, async () => {
     if (req.method !== "GET") {
       res.status(405).send({
@@ -61,7 +61,7 @@ export const getWeeklyCounts = functions.https.onRequest((req, res) => {
 
     try {
       const [rows] = await bigquery.query(
-        sqlQuery("weeklyCountsQuery.sql").replace(
+        sqlQuery("populationCountsQuery.sql").replace(
           "__GBIF_IDS__",
           gbifIds.join(",")
         )
