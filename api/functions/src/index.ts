@@ -60,10 +60,12 @@ export const getWeeklyCounts = functions.https.onRequest((req, res) => {
     }
 
     try {
-      const queryFilePath = path.resolve(__dirname, "weeklyCountsQuery.sql");
-      let query = fs.readFileSync(queryFilePath, "utf8");
-      query = query.replace("__GBIF_IDS__", gbifIds.join(","));
-      const [rows] = await bigquery.query(query);
+      const [rows] = await bigquery.query(
+        sqlQuery("weeklyCountsQuery.sql").replace(
+          "__GBIF_IDS__",
+          gbifIds.join(",")
+        )
+      );
       res.status(200).send(rows);
     } catch (error) {
       console.error("Failed to query data:", error);
@@ -71,3 +73,25 @@ export const getWeeklyCounts = functions.https.onRequest((req, res) => {
     }
   });
 });
+
+export const getSpeciesList = functions.https.onRequest((req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== "GET") {
+      res.status(405).send({
+        error: "Invalid request method. Only GET requests are allowed.",
+      });
+      return;
+    }
+
+    try {
+      const [rows] = await bigquery.query(sqlQuery("speciesList.sql"));
+      res.status(200).send(rows);
+    } catch (error) {
+      console.error("Failed to query data:", error);
+      res.status(500).send({ error: "Failed to query data from BigQuery." });
+    }
+  });
+});
+
+const sqlQuery = (sqlFileName: string) =>
+  fs.readFileSync(path.resolve(__dirname, sqlFileName), "utf8");
