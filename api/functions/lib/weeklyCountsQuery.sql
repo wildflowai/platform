@@ -8,5 +8,5 @@ FROM `wildflow-demo.clean.*`
 WHERE timestamp IS NOT NULL
   AND metadata.individualCount IS NOT NULL
   AND organism.gbif_id IN (__GBIF_IDS__)
-GROUP BY 1, 2, 3
-ORDER BY 1, 2, 3
+GROUP BY 1, 2, 3, 4
+ORDER BY 1, 2, 3, 4
