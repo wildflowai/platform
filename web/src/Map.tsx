@@ -126,7 +126,12 @@ function Map() {
         zoom={10}
         onLoad={onLoad}
         onUnmount={onUnmount}
-        mapTypeId={"satellite"}
+        options={{
+          mapTypeId: "satellite",
+          fullscreenControl: false,
+          mapTypeControl: false,
+          streetViewControl: false,
+        }}
       >
         {getUniqueLocations(responseData).map((point: any, i: number) => (
           <Circle
