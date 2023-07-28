@@ -74,6 +74,8 @@ export const getPopulationCounts = functions.https.onRequest((req, res) => {
   });
 });
 
+let speciesCache: Array<any> | null = null;
+
 export const getSpeciesList = functions.https.onRequest((req, res) => {
   corsHandler(req, res, async () => {
     if (req.method !== "GET") {
@@ -84,8 +86,30 @@ export const getSpeciesList = functions.https.onRequest((req, res) => {
     }
 
     try {
-      const [rows] = await bigquery.query(sqlQuery("speciesList.sql"));
-      res.status(200).send(rows);
+      if (!speciesCache) {
+        const [rows] = await bigquery.query(sqlQuery("speciesList.sql"));
+        speciesCache = rows;
+      }
+
+      var result = {
+        total: speciesCache.length,
+        species: speciesCache.slice(0, 10),
+      };
+
+      const searchTerm = req.query.searchTerm;
+      if (searchTerm && typeof searchTerm === "string") {
+        const matching = speciesCache.filter(
+          (row) =>
+            row.gbif_id.toString().includes(searchTerm) ||
+            row.scientific_name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        result = {
+          total: matching.length,
+          species: matching.slice(0, 10),
+        };
+      }
+
+      res.status(200).send(result);
     } catch (error) {
       console.error("Failed to query data:", error);
       res.status(500).send({ error: "Failed to query data from BigQuery." });

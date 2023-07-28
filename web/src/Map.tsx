@@ -7,6 +7,9 @@ import {
   Circle,
 } from "@react-google-maps/api";
 import TimeSlider, { TimeData } from "./TimeSlider";
+import Select from "react-select";
+import AsyncSelect from "react-select/async";
+import { ThemeContext } from "./ThemeContext";
 
 const containerStyle = {
   width: "100%",
@@ -31,6 +34,11 @@ interface DataRow {
   lat: number;
   lon: number;
   mean_count: number;
+}
+
+interface OptionType {
+  value: number;
+  label: string;
 }
 
 const getUniqueLocations = (responseData: DataRow[]) => {
@@ -64,34 +72,88 @@ const selectedPopulationCounts = (responseData: any, selectedDate: number) => {
   );
 };
 
+const getTimeDataVal = (responseData: DataRow[]) =>
+  responseData.map((row: DataRow) => {
+    return {
+      date_millis: new Date((row.day_start as any).value).getTime(),
+      count: row.mean_count,
+    };
+  });
+
 function Map() {
+  const { darkMode, toggleDarkMode } = React.useContext(ThemeContext);
+  const [totalMatches, setTotalMatches] = React.useState<number | null>(null);
+
   const [map, setMap] = React.useState(null);
-  // const [populationCounts, setPopulationCounts] = React.useState<any[]>([]);
   const [responseData, setResponseData] = React.useState<DataRow[]>([]);
-  const [timeData, setTimeData] = React.useState<TimeData[]>([]);
+  //const [timeData, setTimeData] = React.useState<TimeData[]>([]);
   const [selectedDate, setSelectedDate] = React.useState<number | null>(null);
+  const [species, setSpecies] = React.useState<{
+    value: number | null;
+    label: string | null;
+  }>({ value: null, label: null });
+  const [speciesOptions, setSpeciesOptions] = React.useState<OptionType[]>([]);
 
-  const fetchPopulationCounts = async () => {
-    const response = await axios.get(
-      "https://us-central1-wildflow-demo.cloudfunctions.net/getPopulationCounts"
-    );
+  const fetchPopulationCounts = async (speciesId: number | null = null) => {
+    let url =
+      "https://us-central1-wildflow-demo.cloudfunctions.net/getPopulationCounts";
+    if (speciesId !== null) {
+      url += `?gbifIds=${speciesId}`;
+    }
+    const response = await axios.get(url);
     setResponseData(response.data);
+    setSelectedDate(getTimeDataVal(response.data)[0].date_millis);
+  };
 
-    const timeDataVal: TimeData[] = response.data.map((row: DataRow) => {
-      return {
-        date_millis: new Date((row.day_start as any).value).getTime(),
-        count: row.mean_count,
-      };
-    });
-    setTimeData(timeDataVal);
-    if (timeDataVal.length > 0) {
-      setSelectedDate(timeDataVal[0].date_millis);
+  const loadSpeciesOptions = async (
+    inputValue: string = "",
+    callback?: (options: OptionType[]) => void
+  ): Promise<OptionType[]> => {
+    try {
+      const response = await axios.get(
+        `https://us-central1-wildflow-demo.cloudfunctions.net/getSpeciesList?searchTerm=${inputValue}`
+      );
+      const totalMatches = response.data.total;
+      setTotalMatches(totalMatches);
+
+      const speciesData: OptionType[] = response.data.species
+        .map((species: { gbif_id: number; scientific_name: string }) => ({
+          value: species.gbif_id,
+          label: species.scientific_name,
+        }))
+        .slice(0, 5); // Limit options to 5
+      setSpeciesOptions(speciesData);
+      if (!species.value && speciesData.length > 0) {
+        const defaultSpecies = speciesData[0];
+        setSpecies(defaultSpecies); // Set the default species as the first one
+        fetchPopulationCounts(defaultSpecies.value);
+      }
+      callback?.(speciesData);
+      return speciesData;
+    } catch (err) {
+      console.error(err);
+      callback?.([]);
+      return [];
     }
   };
 
+  const handleSpeciesChange = (selectedOption: any) => {
+    setSpecies(selectedOption);
+    fetchPopulationCounts(selectedOption.value);
+  };
+
   React.useEffect(() => {
-    fetchPopulationCounts();
+    loadSpeciesOptions().catch((error) => {
+      console.error("Error loading species options:", error);
+    });
   }, []);
+
+  React.useEffect(() => {
+    if (species.value !== null) {
+      fetchPopulationCounts(species.value);
+    }
+    loadSpeciesOptions();
+  }, [species]);
 
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
@@ -118,7 +180,7 @@ function Map() {
     [responseData]
   );
 
-  return isLoaded && responseData.length > 0 && timeData ? (
+  return isLoaded && responseData.length > 0 ? (
     <div className="h-screen w-full flex flex-col relative">
       <GoogleMap
         mapContainerStyle={containerStyle}
@@ -158,7 +220,36 @@ function Map() {
         )}
       </GoogleMap>
       <div className="absolute bottom-3 ml-20 w-10/12">
-        <TimeSlider data={timeData} onDateChange={setSelectedDate} />
+        <TimeSlider
+          data={getTimeDataVal(responseData)}
+          onDateChange={setSelectedDate}
+        />
+      </div>
+
+      <div className="absolute top-3 ml-20 w-1/3 flex justify-between items-center">
+        <AsyncSelect
+          cacheOptions={false}
+          loadOptions={loadSpeciesOptions}
+          defaultOptions={speciesOptions}
+          onChange={handleSpeciesChange}
+          placeholder={`Search...`}
+          value={species}
+          styles={{
+            option: (provided, state) => ({
+              ...provided,
+              color: "#202020",
+            }),
+            singleValue: (provided) => ({
+              ...provided,
+              color: "#202020",
+            }),
+            control: (provided) => ({
+              ...provided,
+              width: "90%", // adjust width to make room for total count
+            }),
+          }}
+        />
+        <div className="ml-4">{totalMatches && `${totalMatches} total`}</div>
       </div>
     </div>
   ) : (
