@@ -30,10 +30,10 @@ const getCenter = (points: any) => {
 
 interface DataRow {
   gbif_id: number;
-  day_start: object;
+  timewindow_start: object;
   lat: number;
   lon: number;
-  mean_count: number;
+  population_count: number;
 }
 
 interface OptionType {
@@ -58,7 +58,7 @@ const getPopulationCounts = (responseData: any) => {
   return responseData.map((row: DataRow) => {
     return {
       location: new window.google.maps.LatLng(row.lat, row.lon),
-      weight: row.mean_count,
+      weight: row.population_count,
     };
   });
 };
@@ -66,7 +66,7 @@ const getPopulationCounts = (responseData: any) => {
 const selectedPopulationCounts = (responseData: any, selectedDate: number) => {
   return getPopulationCounts(
     responseData.filter((row: any) => {
-      const date = new Date((row.day_start as any).value).getTime();
+      const date = new Date((row.timewindow_start as any).value).getTime();
       return date === selectedDate;
     })
   );
@@ -75,8 +75,8 @@ const selectedPopulationCounts = (responseData: any, selectedDate: number) => {
 const getTimeDataVal = (responseData: DataRow[]) =>
   responseData.map((row: DataRow) => {
     return {
-      date_millis: new Date((row.day_start as any).value).getTime(),
-      count: row.mean_count,
+      date_millis: new Date((row.timewindow_start as any).value).getTime(),
+      count: row.population_count,
     };
   });
 
@@ -98,7 +98,7 @@ function Map() {
     let url =
       "https://us-central1-wildflow-demo.cloudfunctions.net/getPopulationCounts";
     if (speciesId !== null) {
-      url += `?gbifIds=${speciesId}`;
+      url += `?gbifIds=${speciesId}&timeGranularity=MONTH`;
     }
     const response = await axios.get(url);
     setResponseData(response.data);

@@ -46,6 +46,27 @@ export const getPopulationCounts = functions.https.onRequest((req, res) => {
       return;
     }
 
+    const timeGranularity =
+      (req.query.timeGranularity as string) || "WEEK(MONDAY)";
+    const allowedTimeGranularities = [
+      "MINUTE",
+      "HOUR",
+      "DAY",
+      "WEEK(MONDAY)",
+      "MONTH",
+      "QUARTER",
+      "YEAR",
+    ];
+
+    if (!allowedTimeGranularities.includes(timeGranularity)) {
+      res.status(400).send({
+        error: `Invalid time granularity. Allowed values are ${allowedTimeGranularities.join(
+          ", "
+        )}.`,
+      });
+      return;
+    }
+
     const gbifIds = req.query.gbifIds
       ? Array.isArray(req.query.gbifIds)
         ? req.query.gbifIds.map(Number)
@@ -61,10 +82,9 @@ export const getPopulationCounts = functions.https.onRequest((req, res) => {
 
     try {
       const [rows] = await bigquery.query(
-        sqlQuery("populationCountsQuery.sql").replace(
-          "__GBIF_IDS__",
-          gbifIds.join(",")
-        )
+        sqlQuery("populationCountsQuery.sql")
+          .replace("__GBIF_IDS__", gbifIds.join(","))
+          .replace("__TIME_GRANULARITY__", timeGranularity)
       );
       res.status(200).send(rows);
     } catch (error) {
