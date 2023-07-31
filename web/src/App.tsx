@@ -8,6 +8,7 @@ import Query from "./Query";
 import Settings from "./Settings";
 import { ThemeContext } from "./ThemeContext";
 import { SelectedPageContext } from "./SelectedPageContext";
+import { OrganismProvider } from "./OrganismProvider";
 
 const App: React.FC = () => {
   const [selectedPageName, setSelectedPageName] = useState<string>("Explorer");
@@ -23,33 +24,35 @@ const App: React.FC = () => {
       <SelectedPageContext.Provider
         value={{ selectedPageName, setSelectedPageName }}
       >
-        <div className="flex">
-          <Sidebar />
-          <div
-            className={`flex flex-grow flex-shrink ${
-              darkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"
-            } transition-all duration-200 ease-in-out`}
-          >
-            {(() => {
-              switch (selectedPageName) {
-                case "Explorer":
-                  return <Explorer />;
-                case "Files":
-                  return <Files />;
-                case "Datasets":
-                  return <Datasets />;
-                case "Workflows":
-                  return <Workflows />;
-                case "Query":
-                  return <Query />;
-                case "Settings":
-                  return <Settings />;
-                default:
-                  return null;
-              }
-            })()}
+        <OrganismProvider>
+          <div className="flex">
+            <Sidebar />
+            <div
+              className={`flex flex-grow flex-shrink ${
+                darkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"
+              } transition-all duration-200 ease-in-out`}
+            >
+              {(() => {
+                switch (selectedPageName) {
+                  case "Explorer":
+                    return <Explorer />;
+                  case "Files":
+                    return <Files />;
+                  case "Datasets":
+                    return <Datasets />;
+                  case "Workflows":
+                    return <Workflows />;
+                  case "Query":
+                    return <Query />;
+                  case "Settings":
+                    return <Settings />;
+                  default:
+                    return null;
+                }
+              })()}
+            </div>
           </div>
-        </div>
+        </OrganismProvider>
       </SelectedPageContext.Provider>
     </ThemeContext.Provider>
   );

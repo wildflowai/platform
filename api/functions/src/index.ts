@@ -111,9 +111,10 @@ export const getSpeciesList = functions.https.onRequest((req, res) => {
         speciesCache = rows;
       }
 
+      const sliceLimit = 5;
       var result = {
         total: speciesCache.length,
-        species: speciesCache.slice(0, 10),
+        species: speciesCache.slice(0, sliceLimit),
       };
 
       const searchTerm = req.query.searchTerm;
@@ -121,11 +122,13 @@ export const getSpeciesList = functions.https.onRequest((req, res) => {
         const matching = speciesCache.filter(
           (row) =>
             row.gbif_id.toString().includes(searchTerm) ||
-            row.scientific_name.toLowerCase().includes(searchTerm.toLowerCase())
+            row.verbatim_scientific_name
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase())
         );
         result = {
           total: matching.length,
-          species: matching.slice(0, 10),
+          species: matching.slice(0, sliceLimit),
         };
       }
 
