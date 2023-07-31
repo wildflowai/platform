@@ -35,7 +35,6 @@ const SelectOrganism: React.FC = () => {
 
   return (
     <AsyncSelect
-      className="w-1/3"
       cacheOptions
       loadOptions={loadOrganisms}
       defaultOptions
