@@ -46,7 +46,9 @@ const CustomTooltip: React.FC<TooltipProps<any, string>> = ({
     return (
       <div className="custom-tooltip">
         <p className="label">{`Date: ${date.toLocaleDateString()}`}</p>
-        <p className="intro">{`Count: ${payload[0].value}`}</p>
+        <p className="intro">{`Count: ${
+          Math.round(payload[0].value * 100) / 100
+        }`}</p>
       </div>
     );
   }

@@ -4,6 +4,7 @@ import MapDatapoints from "./MapDatapoints";
 import { usePopulationData } from "./usePopulationData";
 import SelectOrganism from "./SelectOrganism";
 import { OrganismContext } from "./OrganismProvider";
+import MapPopulationCounts from "./MapPopulationCounts";
 
 const Explorer: React.FC = () => {
   const { organism } = React.useContext(OrganismContext);
@@ -14,6 +15,7 @@ const Explorer: React.FC = () => {
         <Map bounds={bounds}>
           <Suspense fallback={<div>Loading population data...</div>}>
             <MapDatapoints data={data} />
+            <MapPopulationCounts data={data} />
           </Suspense>
         </Map>
       </Suspense>

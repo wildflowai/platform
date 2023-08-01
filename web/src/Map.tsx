@@ -26,21 +26,10 @@ const Map: React.FC<MapProps> = ({ bounds, children }) => {
   const mapRef = useRef<google.maps.Map | null>(null);
 
   const onLoad = React.useCallback(function callback(map: google.maps.Map) {
-    const savedCenter = localStorage.getItem("mapCenter");
-    const center = savedCenter
-      ? JSON.parse(savedCenter)
-      : new google.maps.LatLng(10, 10);
-    map.setCenter(center);
     mapRef.current = map;
   }, []);
 
   const onUnmount = React.useCallback(function callback() {
-    if (mapRef.current) {
-      const center = mapRef.current.getCenter();
-      if (center) {
-        localStorage.setItem("mapCenter", JSON.stringify(center.toJSON()));
-      }
-    }
     mapRef.current = null;
   }, []);
 
