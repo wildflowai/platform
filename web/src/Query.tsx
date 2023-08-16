@@ -18,27 +18,24 @@ WHERE timestamp IS NOT NULL
   AND organism.gbif_id IN (278557222)
 GROUP BY 1, 2, 3, 4
 ORDER BY 1, 2, 3, 4
-LIMIT 2
-`;
+LIMIT 2`;
 
-const _MOCK_R_CODE = `
-  library(bigrquery)
-  library(dplyr)
-  library(lubridate)
+const _MOCK_R_CODE = `library(bigrquery)
+library(dplyr)
+library(lubridate)
 
-  data <- bq_project_query(project_id, initial_sql_query, billing = billing) %>% 
-    bq_table_download()
+data <- bq_project_query(project_id, initial_sql_query, billing = billing) %>% 
+  bq_table_download()
 
-  result <- data %>% 
-    filter(organism.gbif_id %in% c(278557222)) %>%
-    mutate(week_start = floor_date(timestamp, "week", week_start = get_week_start("Monday"))) %>% 
-    group_by(organism.gbif_id, week_start, location.lat, location.lon) %>% 
-    summarize(population_count = mean(metadata.individualCount, na.rm = TRUE)) %>% 
-    arrange(organism.gbif_id, week_start, location.lat, location.lon) %>% 
-    head(2)
+result <- data %>% 
+  filter(organism.gbif_id %in% c(278557222)) %>%
+  mutate(week_start = floor_date(timestamp, "week", week_start = get_week_start("Monday"))) %>% 
+  group_by(organism.gbif_id, week_start, location.lat, location.lon) %>% 
+  summarize(population_count = mean(metadata.individualCount, na.rm = TRUE)) %>% 
+  arrange(organism.gbif_id, week_start, location.lat, location.lon) %>% 
+  head(2)
 
-  result
-`;
+result`;
 
 const Query: React.FC = () => {
   interface Result {
@@ -102,7 +99,7 @@ const Query: React.FC = () => {
         </button>
       </div>
 
-      <div className="flex flex-col items-end">
+      <div className="flex flex-col items-end pr-4">
         <CodeMirror
           className={`w-full mb-4 ${
             darkMode ? "text-white" : "text-black"
@@ -125,72 +122,59 @@ const Query: React.FC = () => {
         </button>
       </div>
 
-      <div className="w-full mt-6">
+      <div className="w-full mt-6 pr-4">
         {results.length > 0 && (
-          <table
-            className={`min-w-full ${darkMode ? "bg-gray-700" : "bg-white"}`}
-          >
-            <thead>
-              <tr>
-                {[
-                  "gbif_id",
-                  "week_start",
-                  "lat",
-                  "lon",
-                  "population_count",
-                ].map((header) => (
-                  <th
-                    className={`text-left py-2 px-4 border-b ${
-                      darkMode ? "border-gray-600" : "border-gray-200"
-                    }`}
-                  >
-                    {header}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {results.map((result) => (
-                <tr key={result.gbif_id + result.week_start}>
-                  <td
-                    className={`py-2 px-4 border-b ${
-                      darkMode ? "border-gray-600" : "border-gray-200"
-                    }`}
-                  >
-                    {result.gbif_id}
-                  </td>
-                  <td
-                    className={`py-2 px-4 border-b ${
-                      darkMode ? "border-gray-600" : "border-gray-200"
-                    }`}
-                  >
-                    {result.week_start}
-                  </td>
-                  <td
-                    className={`py-2 px-4 border-b ${
-                      darkMode ? "border-gray-600" : "border-gray-200"
-                    }`}
-                  >
-                    {result.lat}
-                  </td>
-                  <td
-                    className={`py-2 px-4 border-b ${
-                      darkMode ? "border-gray-600" : "border-gray-200"
-                    }`}
-                  >
-                    {result.lon}
-                  </td>
-                  <td
-                    className={`py-2 px-4 border-b ${
-                      darkMode ? "border-gray-600" : "border-gray-200"
-                    }`}
-                  >
-                    {result.population_count}
-                  </td>
+          <>
+            <div
+              className={` rounded p-3 mb-2 ${
+                darkMode
+                  ? "bg-orange-600 text-white"
+                  : "bg-orange-300 text-black"
+              }`}
+            >
+              <a className="font-bold">Note:</a> the data displayed is for
+              demonstration purposes only. We're actively working on integrating
+              this with our backend.
+            </div>
+            <table
+              className={`min-w-full ${darkMode ? "bg-gray-700" : "bg-white"}`}
+            >
+              <thead>
+                <tr>
+                  {[
+                    "gbif_id",
+                    "week_start",
+                    "lat",
+                    "lon",
+                    "population_count",
+                  ].map((header) => (
+                    <th
+                      className={`text-left py-2 px-4 border-b ${
+                        darkMode ? "border-gray-600" : "border-gray-200"
+                      }`}
+                    >
+                      {header}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {results.map((row) => (
+                  <tr>
+                    {Object.values(row).map((value) => (
+                      <td
+                        className={`py-2 px-4 border-b ${
+                          darkMode ? "border-gray-600" : "border-gray-200"
+                        }`}
+                      >
+                        {value}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
         )}
       </div>
     </div>
