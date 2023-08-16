@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@codemirror/lang-sql": "^6.5.4",
     "@react-google-maps/api": "^2.19.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
@@ -10,7 +11,10 @@
     "@types/jest": "^27.5.2",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
+    "@uiw/codemirror-theme-atomone": "^4.21.9",
+    "@uiw/react-codemirror": "^4.21.9",
     "axios": "^1.4.0",
+    "codemirror-lang-r": "^0.1.0-2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^4.10.1",
