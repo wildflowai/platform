@@ -11,7 +11,7 @@ import { SelectedPageContext } from "./SelectedPageContext";
 import { OrganismProvider } from "./OrganismProvider";
 
 const App: React.FC = () => {
-  const [selectedPageName, setSelectedPageName] = useState<string>("Query");
+  const [selectedPageName, setSelectedPageName] = useState<string>("Explorer");
   const [darkMode, setDarkMode] = useState<boolean>(true);
 
   const toggleDarkMode = () => {
