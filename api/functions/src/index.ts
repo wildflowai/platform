@@ -1,4 +1,7 @@
 import * as functions from "firebase-functions";
+import * as admin from "firebase-admin";
+import * as postgres from "postgres";
+import * as dotenv from "dotenv";
 import { BigQuery } from "@google-cloud/bigquery";
 import * as cors from "cors";
 import * as fs from "fs";
@@ -139,6 +142,56 @@ export const getSpeciesList = functions.https.onRequest((req, res) => {
     }
   });
 });
+
+// Setup cors to restrict domains that can access the function
+const audienceSubscriberCorsHandler = cors({
+  origin: [
+    // "http://localhost:3000",
+    "https://www.wildflow.ai",
+    "https://wildflow.ai",
+  ],
+});
+
+dotenv.config();
+
+const { PGHOST, PGDATABASE, PGUSER, PGPASSWORD, ENDPOINT_ID } = process.env;
+const URL = `postgres://${PGUSER}:${PGPASSWORD}@${PGHOST}/${PGDATABASE}?options=project%3D${ENDPOINT_ID}`;
+
+const sql = postgres(URL, { ssl: "require" });
+
+admin.initializeApp();
+
+export const addAudienceSubscriber = functions.https.onRequest(
+  async (request, response) => {
+    return audienceSubscriberCorsHandler(request, response, async () => {
+      try {
+        const { name, email } = request.body;
+        const emailRegex = /^[\w-.+]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        const nameRegex = /^[\p{L} \-]+$/u;
+
+        if (
+          !name ||
+          !email ||
+          !emailRegex.test(email) ||
+          !nameRegex.test(name)
+        ) {
+          response.status(400).send("Failed to subscribe");
+          return;
+        }
+
+        await sql`
+                  INSERT INTO audience (name, email) VALUES (${name}, ${email})
+                  ON CONFLICT (email) DO NOTHING
+              `;
+
+        response.status(200).send("Thank you for subscribing!");
+      } catch (error) {
+        console.error("Error writing to PostgreSQL", error);
+        response.status(500).send("Failed to subscribe");
+      }
+    });
+  }
+);
 
 const sqlQuery = (sqlFileName: string) =>
   fs.readFileSync(path.resolve(__dirname, sqlFileName), "utf8");
