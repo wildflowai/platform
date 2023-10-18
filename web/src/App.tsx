@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Explorer from "./Explorer";
 import Files from "./Files";
 import Datasets from "./Datasets";
+import MergeTables from "./MergeTables";
 import Workflows from "./Workflows";
 import Query from "./Query";
 import Settings from "./Settings";
@@ -19,6 +20,18 @@ const App: React.FC = () => {
     document.documentElement.classList.toggle("dark");
   };
 
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get("token");
+    const projectId = urlParams.get("projectId");
+    if (token) {
+      localStorage.setItem("wildflow-invite-token", token);
+    }
+    if (projectId) {
+      localStorage.setItem("wildflow-project-id", projectId);
+    }
+  }, []);
+
   return (
     <ThemeContext.Provider value={{ darkMode, toggleDarkMode }}>
       <SelectedPageContext.Provider
@@ -34,6 +47,8 @@ const App: React.FC = () => {
             >
               {(() => {
                 switch (selectedPageName) {
+                  case "MergeTables":
+                    return <MergeTables />;
                   case "Explorer":
                     return <Explorer />;
                   case "Files":
@@ -41,7 +56,7 @@ const App: React.FC = () => {
                   case "Datasets":
                     return <Datasets />;
                   case "Workflows":
-                    return <Workflows />;
+                    return <MergeTables />;
                   case "Query":
                     return <Query />;
                   case "Settings":

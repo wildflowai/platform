@@ -6,9 +6,219 @@ import { BigQuery } from "@google-cloud/bigquery";
 import * as cors from "cors";
 import * as fs from "fs";
 import * as path from "path";
+import { generateSQLCode } from "./mergeTablesSqlGen";
+import * as crypto from "crypto";
+
+dotenv.config();
+
+const { PGHOST, PGDATABASE, PGUSER, PGPASSWORD, ENDPOINT_ID, MY_HASH_TOKEN } =
+  process.env;
 
 const corsHandler = cors({ origin: true });
 const bigquery = new BigQuery();
+
+const bigQueryClients: { [projectId: string]: BigQuery } = {};
+
+function getBigQueryClient(projectId: string): BigQuery {
+  if (!bigQueryClients[projectId]) {
+    bigQueryClients[projectId] = new BigQuery({ projectId });
+  }
+  return bigQueryClients[projectId];
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return "0 Byte";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+}
+
+const hashToken = (token: string): string => {
+  return crypto.createHash("sha256").update(token).digest("hex");
+};
+
+const checkRequestToken = (req: any): boolean => {
+  const token = req.body.token;
+  return token && MY_HASH_TOKEN && hashToken(token) === MY_HASH_TOKEN;
+};
+
+export const mergeTablesMinDistance = functions.https.onRequest((req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== "POST") {
+      res.status(405).send({
+        error: "Invalid request method. Only POST requests are allowed.",
+      });
+      return;
+    }
+    if (!checkRequestToken(req)) {
+      res.status(401).send({
+        error: "Invalid token",
+      });
+      return;
+    }
+    const projectId = req.body.projectId;
+    const data = req.body.payload;
+    return res.status(200).send(generateSQLCode(projectId, data));
+  });
+});
+
+export const getColumnsForTables = functions.https.onRequest((req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== "POST") {
+      res.status(405).send({
+        error: "Invalid request method. Only POST requests are allowed.",
+      });
+      return;
+    }
+    if (!checkRequestToken(req)) {
+      res.status(401).send({
+        error: "Invalid token",
+      });
+      return;
+    }
+
+    const projectId = req.body.projectId;
+    const tables = req.body.tables;
+
+    if (!projectId || !tables || !Array.isArray(tables)) {
+      res.status(400).send({
+        error: "projectId and tables (as an array) are required.",
+      });
+      return;
+    }
+
+    const bigquery = getBigQueryClient(projectId);
+
+    // Generate UNION ALL clauses for each table
+    const unionQueries = tables
+      .map((table, tableIndex) => {
+        const [datasetId, tableName] = table.split(".");
+        return `
+        SELECT
+          '${datasetId}.${tableName}' as table_ref,
+          ${tableIndex} as table_index,
+          column_name
+        FROM \`${projectId}.${datasetId}.INFORMATION_SCHEMA.COLUMNS\`
+        WHERE table_name = '${tableName}'
+      `;
+      })
+      .join(" UNION ALL ");
+
+    try {
+      const [rows] = await bigquery.query(unionQueries);
+
+      const groupedData = rows.reduce((acc, row) => {
+        if (!acc[row.table_index]) {
+          acc[row.table_index] = {
+            index: row.table_index,
+            table: row.table_ref,
+            columns: [],
+          };
+        }
+        acc[row.table_index].columns.push(row.column_name);
+        return acc;
+      }, {});
+
+      const response = Object.values(groupedData);
+
+      res.status(200).send(response);
+    } catch (error) {
+      console.error("Failed to get columns:", error);
+      res.status(500).send({ error: "Failed to get columns from BigQuery." });
+    }
+  });
+});
+
+export const listDatasetsForProject = functions.https.onRequest((req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== "POST") {
+      res.status(405).send({
+        error: "Invalid request method. Only GET requests are allowed.",
+      });
+      return;
+    }
+    if (!checkRequestToken(req)) {
+      res.status(401).send({
+        error: "Invalid token",
+      });
+      return;
+    }
+
+    const projectId = (req.body.projectId as string) || "default_project_id";
+
+    const bigquery = getBigQueryClient(projectId);
+
+    try {
+      const [datasets] = await bigquery.getDatasets();
+      const tableInfos: any[] = [];
+
+      for (const dataset of datasets) {
+        const [tables] = await dataset.getTables();
+
+        for (const table of tables) {
+          const [metadata] = await table.getMetadata();
+          tableInfos.push({
+            datasetId: metadata.tableReference.datasetId,
+            id: table.id,
+            name: metadata.tableReference.tableId,
+            numRows: metadata.numRows,
+            size: formatBytes(metadata.numBytes),
+          });
+        }
+      }
+
+      res.status(200).send(tableInfos);
+    } catch (error) {
+      console.error("Failed to get tables:", error);
+      res.status(500).send({ error: "Failed to get tables from BigQuery." });
+    }
+  });
+});
+
+export const sampleBigQueryTable = functions.https.onRequest((req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== "POST") {
+      res.status(405).send({
+        error: "Invalid request method. Only GET requests are allowed.",
+      });
+      return;
+    }
+    if (!checkRequestToken(req)) {
+      res.status(401).send({
+        error: "Invalid token",
+      });
+      return;
+    }
+
+    const projectId = req.body.projectId as string;
+    const datasetId = req.body.datasetId as string;
+    const tableId = req.body.tableId as string;
+
+    if (!projectId || !datasetId || !tableId) {
+      res.status(400).send({
+        error:
+          "projectId, datasetId, and tableId query parameters are required.",
+      });
+      return;
+    }
+
+    const bigquery = getBigQueryClient(projectId);
+
+    try {
+      const table = bigquery.dataset(datasetId).table(tableId);
+      const options: any = {
+        autoPaginate: false,
+        maxResults: 10,
+      };
+      const [rows] = await table.getRows(options);
+      res.status(200).send(rows);
+    } catch (error) {
+      console.error("Failed to read table:", error);
+      res.status(500).send({ error: "Failed to read table from BigQuery." });
+    }
+  });
+});
 
 export const listDatasets = functions.https.onRequest((req, res) => {
   corsHandler(req, res, async () => {
@@ -152,9 +362,6 @@ const audienceSubscriberCorsHandler = cors({
   ],
 });
 
-dotenv.config();
-
-const { PGHOST, PGDATABASE, PGUSER, PGPASSWORD, ENDPOINT_ID } = process.env;
 const URL = `postgres://${PGUSER}:${PGPASSWORD}@${PGHOST}/${PGDATABASE}?options=project%3D${ENDPOINT_ID}`;
 
 const sql = postgres(URL, { ssl: "require" });

@@ -52,7 +52,9 @@ const Sidebar: React.FC = () => {
     <div
       className={`flex flex-col items-start h-screen overflow-auto transition-all duration-200 ease-in-out ${
         showText ? "w-36" : "w-16"
-      } ${darkMode ? "bg-gray-800 text-white" : "bg-gray-200 text-black"}`}
+      } ${
+        darkMode ? "bg-gray-800 text-white" : "bg-gray-200 text-black"
+      } flex-shrink-0`}
     >
       <button onClick={() => setShowText(!showText)} className="mt-3 ml-4 mb-1">
         <GiHamburgerMenu
