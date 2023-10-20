@@ -47,12 +47,15 @@ const MergeTablesConfirmation: React.FC<Props> = ({ data, outputTable }) => {
         darkMode ? "bg-gray-800 text-white" : "bg-white text-black"
       }`}
     >
-      <div className="flex flex-col items-end pr-4">
+      <div className="flex flex-col items-center pr-4">
+        <h1 className="text-large mt-4 mb-4">
+          This code will be executed to merge the tables:
+        </h1>
         <CodeMirror
           className={`w-full mb-4 overflow-y-auto ${
             darkMode ? "text-white" : "text-black"
           } text-lg`}
-          style={{ maxHeight: "50vh" }}
+          style={{ maxHeight: "80vh", maxWidth: "70%" }}
           value={generatedSql}
           theme={darkMode ? atomone : "light"}
           extensions={[sql()]}

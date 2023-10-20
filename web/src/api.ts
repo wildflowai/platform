@@ -9,6 +9,12 @@ const token = (): string => {
 const _BACKEND_DOMAIN = "https://us-central1-wildflow-demo.cloudfunctions.net";
 
 export const getAllTablesForProject = async () => {
+  const key = "allTablesForProject" + projectId();
+  const cachedData = sessionStorage.getItem(key);
+  if (cachedData) {
+    return JSON.parse(cachedData);
+  }
+
   const response = await fetch(`${_BACKEND_DOMAIN}/listDatasetsForProject`, {
     method: "POST",
     headers: {
@@ -19,7 +25,9 @@ export const getAllTablesForProject = async () => {
       projectId: projectId(),
     }),
   });
+
   const data = await response.json();
+  sessionStorage.setItem(key, JSON.stringify(data));
   return data;
 };
 
