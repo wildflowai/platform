@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { getAllTablesForProject, getColumnsForTable } from "./api";
 import SelectTable from "./SelectTables";
 import SelectColumns from "./SelectColumns";
+import ShowText from "./ShowText";
 
 export interface TableInfo {
   datasetId: string;
@@ -20,7 +21,6 @@ const MergeTables: React.FC = () => {
   const [selectedTables, setSelectedTables] = useState<TableInfo[]>([]);
   const [nextStep, setNextStep] = useState(false);
 
-  //localStorage.setItem("wildflow-invite-token", token);
   const token = localStorage.getItem("wildflow-invite-token");
   const projectId = localStorage.getItem("wildflow-project-id");
 
@@ -44,27 +44,21 @@ const MergeTables: React.FC = () => {
 
   if (!token) {
     return (
-      <div className="flex w-full items-center justify-center">
-        This feature under development. Please specify your auth token to view
-        this page.
-      </div>
+      <ShowText
+        text="This feature under development. Please specify your auth token to view
+      this page."
+      />
     );
   }
 
   if (!projectId) {
     return (
-      <div className="flex w-full items-center justify-center">
-        This feature under development. The projectId is missing.
-      </div>
+      <ShowText text="This feature under development. The projectId is missing." />
     );
   }
 
   if (!tables.length) {
-    return (
-      <div className="flex w-full items-center justify-center">
-        Fetching a list of tables...
-      </div>
-    );
+    return <ShowText text="Fetching a list of tables..." />;
   }
 
   if (nextStep) {

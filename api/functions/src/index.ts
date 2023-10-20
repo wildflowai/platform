@@ -87,6 +87,66 @@ export const mergeTablesMinDistance = functions.https.onRequest((req, res) => {
   });
 });
 
+export const checkJobStatus = functions.https.onRequest(async (req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== "POST") {
+      res.status(405).send({
+        error: "Invalid request method. Only POST requests are allowed.",
+      });
+      return;
+    }
+    if (!checkRequestToken(req)) {
+      res.status(401).send({
+        error: "Invalid token",
+      });
+      return;
+    }
+
+    const jobId = req.body.jobId;
+    const projectId = req.body.projectId;
+
+    if (!jobId || !projectId) {
+      return res
+        .status(400)
+        .send({ error: "Job ID and Project ID are required." });
+    }
+
+    const bqClient = getBigQueryClient(projectId);
+    const job = bqClient.job(jobId);
+
+    try {
+      const [metadata] = await job.getMetadata();
+      const status = metadata.status;
+
+      if (status.errorResult) {
+        return res.status(500).send({ error: status.errorResult.message });
+      }
+
+      const progress = (status.progressRatio || 0) * 100;
+      const creationTime = metadata.statistics.creationTime;
+      const endTime = metadata.statistics.endTime; // <-- Job finish time
+
+      // Additional interesting info for query jobs
+      const totalRows = metadata.statistics.query?.totalRows;
+      const totalBytesProcessed =
+        metadata.statistics.query?.totalBytesProcessed;
+      const cacheHit = metadata.statistics.query?.cacheHit;
+
+      return res.status(200).send({
+        status: status.state,
+        progress,
+        creationTime,
+        endTime,
+        totalRows,
+        totalBytesProcessed,
+        cacheHit,
+      });
+    } catch (err: any) {
+      return res.status(500).send({ error: err.message });
+    }
+  });
+});
+
 export const getColumnsForTables = functions.https.onRequest((req, res) => {
   corsHandler(req, res, async () => {
     if (req.method !== "POST") {

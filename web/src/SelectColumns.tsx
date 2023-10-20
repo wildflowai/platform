@@ -161,7 +161,7 @@ const SelectColumns: React.FC<Props> = ({ tables, returnCallBack }) => {
   const warningText = generateWarningText(data, duplicates);
 
   if (finalConfirmation) {
-    return <MergeTablesConfirmation data={data} />;
+    return <MergeTablesConfirmation data={data} outputTable={outputTable} />;
   }
 
   if (inspectingTable !== "") {

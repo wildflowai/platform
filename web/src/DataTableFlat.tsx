@@ -25,14 +25,23 @@ const DataTableFlat: React.FC<Props> = ({ data }) => {
       return {
         Header: key,
         accessor: (row: any) => {
+          const cellValue = row[key];
+
           if (
             key.toLowerCase() === "timestamp" &&
-            typeof row[key] === "object"
+            typeof cellValue === "object" &&
+            cellValue.value !== undefined
           ) {
-            return row[key].value;
+            return cellValue.value;
           }
-          return row[key];
+
+          if (typeof cellValue === "object") {
+            return JSON.stringify(cellValue, null, 2);
+          }
+
+          return cellValue;
         },
+
         style: style,
       };
     });

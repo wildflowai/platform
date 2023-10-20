@@ -1,4 +1,4 @@
-import { SidebarButtonName, PageName } from "./types";
+import { useNavigate } from "react-router-dom";
 import React, { useContext } from "react";
 import {
   AiOutlineGlobal,
@@ -18,33 +18,37 @@ import { ThemeContext } from "./ThemeContext";
 import { SelectedPageContext } from "./SelectedPageContext";
 import { TbBrandGoogleBigQuery } from "react-icons/tb";
 
-type VisibleButton = { Icon: any; text: string } | "separator";
+type VisibleButton = { Icon: any; text: string; path: string } | "separator";
 
 const Sidebar: React.FC = () => {
+  const navigate = useNavigate();
   const { darkMode, toggleDarkMode } = useContext(ThemeContext);
   const { selectedPageName, setSelectedPageName } =
     useContext(SelectedPageContext);
   const [showText, setShowText] = React.useState(false);
 
   const buttons: VisibleButton[] = [
-    { Icon: AiOutlineDropbox, text: "Files" },
-    { Icon: AiOutlineDatabase, text: "Datasets" },
-    { Icon: AiOutlineGlobal, text: "Explorer" },
-    { Icon: LuWorkflow, text: "Workflows" },
-    { Icon: TbBrandGoogleBigQuery, text: "Query" },
+    { Icon: AiOutlineDropbox, text: "Files", path: "/files" },
+    { Icon: AiOutlineDatabase, text: "Datasets", path: "/datasets" },
+    { Icon: AiOutlineGlobal, text: "Explorer", path: "/explorer" },
+    { Icon: LuWorkflow, text: "Workflows", path: "/workflows" },
+    { Icon: TbBrandGoogleBigQuery, text: "Query", path: "/query" },
     "separator",
     {
       Icon: darkMode ? BsFillBrightnessHighFill : BsFillMoonFill,
       text: darkMode ? "Day" : "Night",
+      path: "", // No path for the dark mode toggle
     },
-    { Icon: AiOutlineSetting, text: "Settings" },
+    { Icon: AiOutlineSetting, text: "Settings", path: "/settings" },
   ];
 
-  const handleClick = (buttonName: string) => {
-    if (buttonName === (darkMode ? "Day" : "Night")) {
+  const handleClick = (b: VisibleButton) => {
+    if (b === "separator") return;
+    if (b.text === (darkMode ? "Day" : "Night")) {
       toggleDarkMode();
     } else {
-      setSelectedPageName(buttonName);
+      setSelectedPageName(b.text);
+      navigate(b.path);
     }
   };
 
@@ -71,7 +75,7 @@ const Sidebar: React.FC = () => {
             className={`my-3 flex items-center w-full justify-start pl-4 flex-shrink-0 ${
               button.text === selectedPageName ? "text-blue-500" : ""
             }`}
-            onClick={() => handleClick(button.text)}
+            onClick={() => handleClick(button)}
           >
             <div
               className={`flex items-center w-full justify-start hover:text-blue-500 dark:hover:text-blue-300`}

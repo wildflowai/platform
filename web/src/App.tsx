@@ -10,6 +10,10 @@ import Settings from "./Settings";
 import { ThemeContext } from "./ThemeContext";
 import { SelectedPageContext } from "./SelectedPageContext";
 import { OrganismProvider } from "./OrganismProvider";
+import { Routes, Route } from "react-router-dom";
+import JobResults from "./JobResults";
+import { BrowserRouter } from "react-router-dom";
+import DataTableLink from "./DataTableLink";
 
 const App: React.FC = () => {
   const [selectedPageName, setSelectedPageName] = useState<string>("Explorer");
@@ -33,43 +37,47 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ darkMode, toggleDarkMode }}>
-      <SelectedPageContext.Provider
-        value={{ selectedPageName, setSelectedPageName }}
-      >
-        <OrganismProvider>
-          <div className="flex">
-            <Sidebar />
-            <div
-              className={`flex flex-grow flex-shrink ${
-                darkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"
-              } transition-all duration-200 ease-in-out`}
-            >
-              {(() => {
-                switch (selectedPageName) {
-                  case "MergeTables":
-                    return <MergeTables />;
-                  case "Explorer":
-                    return <Explorer />;
-                  case "Files":
-                    return <Files />;
-                  case "Datasets":
-                    return <Datasets />;
-                  case "Workflows":
-                    return <MergeTables />;
-                  case "Query":
-                    return <Query />;
-                  case "Settings":
-                    return <Settings />;
-                  default:
-                    return null;
-                }
-              })()}
+    <BrowserRouter>
+      <ThemeContext.Provider value={{ darkMode, toggleDarkMode }}>
+        <SelectedPageContext.Provider
+          value={{ selectedPageName, setSelectedPageName }}
+        >
+          <OrganismProvider>
+            <div className="flex">
+              <Sidebar />
+              <div
+                className={`flex flex-grow flex-shrink ${
+                  darkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"
+                } transition-all duration-200 ease-in-out`}
+              >
+                <Routes>
+                  <Route path="/job/:jobId" element={<JobResults />} />
+                  <Route path="/table/:tableName" element={<DataTableLink />} />
+                  <Route path="/mergetables" element={<MergeTables />} />
+                  <Route path="/explorer" element={<Explorer />} />
+                  <Route path="/" element={<Explorer />} />
+                  <Route path="/files" element={<Files />} />
+                  <Route path="/datasets" element={<Datasets />} />
+                  <Route path="/workflows" element={<MergeTables />} />
+                  <Route path="/query" element={<Query />} />
+                  <Route path="/settings" element={<Settings />} />
+                  {/* You can add a default fallback route if needed */}
+                  <Route path="*" element={<WrongUrl />} />
+                </Routes>
+              </div>
             </div>
-          </div>
-        </OrganismProvider>
-      </SelectedPageContext.Provider>
-    </ThemeContext.Provider>
+          </OrganismProvider>
+        </SelectedPageContext.Provider>
+      </ThemeContext.Provider>
+    </BrowserRouter>
+  );
+};
+
+const WrongUrl: React.FC = () => {
+  return (
+    <div className="flex items-center justify-center w-full">
+      It seems you entered a wrong URL 🤗
+    </div>
   );
 };
 
