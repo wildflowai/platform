@@ -1,6 +1,7 @@
 import React, { useContext, useMemo } from "react";
 import { useTable, useResizeColumns } from "react-table";
 import { ThemeContext } from "./ThemeContext";
+import ShowText from "./ShowText";
 
 type Props = {
   data: Record<string, any>[];
@@ -33,6 +34,15 @@ const DataTableFlat: React.FC<Props> = ({ data }) => {
             cellValue.value !== undefined
           ) {
             return cellValue.value;
+          }
+
+          // if it has { value: "some value" } structure
+          // and no other fields, only value, then return value
+          if (
+            typeof cellValue === "object" &&
+            Object.keys(cellValue).length === 1
+          ) {
+            return JSON.stringify(cellValue, null, 2);
           }
 
           if (typeof cellValue === "object") {

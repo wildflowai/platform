@@ -57,8 +57,25 @@ export const mergeTablesMinDistance = async (
 //   totalBytesProcessed: "3809384",
 //   cacheHit: false,
 // };
+// another example
+// { error: "Job execution was cancelled: User requested cancellation" };
 export const checkJobStatus = async (jobId: string) => {
   const response = await fetch(`${_BACKEND_DOMAIN}/checkJobStatus`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      token: token(),
+      projectId: projectId(),
+      jobId: jobId,
+    }),
+  });
+  return await response.json();
+};
+
+export const cancelJob = async (jobId: string) => {
+  const response = await fetch(`${_BACKEND_DOMAIN}/cancelJob`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -91,17 +108,38 @@ export const getColumnsForTable = async (
   datasetId: string,
   tableId: string
 ) => {
-  const response = await fetch(`${_BACKEND_DOMAIN}/sampleBigQueryTable`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      token: token(),
-      projectId: projectId(),
-      datasetId: datasetId,
-      tableId: tableId,
-    }),
-  });
-  return response.json();
+  try {
+    const response = await fetch(`${_BACKEND_DOMAIN}/sampleBigQueryTable`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        token: token(),
+        projectId: projectId(),
+        datasetId: datasetId,
+        tableId: tableId,
+      }),
+    });
+
+    if (!response.ok) {
+      // Return an error message based on the status code
+      return {
+        success: false,
+        message: `HTTP error! Status: ${response.status}`,
+      };
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      data: data,
+    };
+  } catch (error: any) {
+    console.error("There has been a problem with your fetch operation:", error);
+    return {
+      success: false,
+      message: error.message || "Unknown error occurred",
+    };
+  }
 };

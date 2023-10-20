@@ -147,6 +147,53 @@ export const checkJobStatus = functions.https.onRequest(async (req, res) => {
   });
 });
 
+export const cancelJob = functions.https.onRequest(async (req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== "POST") {
+      res.status(405).send({
+        error: "Invalid request method. Only POST requests are allowed.",
+      });
+      return;
+    }
+    if (!checkRequestToken(req)) {
+      res.status(401).send({
+        error: "Invalid token",
+      });
+      return;
+    }
+
+    const jobId = req.body.jobId;
+    const projectId = req.body.projectId;
+
+    if (!jobId || !projectId) {
+      return res
+        .status(400)
+        .send({ error: "Job ID and Project ID are required." });
+    }
+
+    const bqClient = getBigQueryClient(projectId);
+    const job = bqClient.job(jobId);
+
+    try {
+      await job.cancel();
+      const [metadata] = await job.getMetadata();
+      const status = metadata.status;
+
+      if (status.state === "DONE" && status.errorResult) {
+        return res
+          .status(200)
+          .send({ message: "Job was cancelled successfully." });
+      } else {
+        return res.status(400).send({
+          error: "Failed to cancel the job or the job had already completed.",
+        });
+      }
+    } catch (err: any) {
+      return res.status(500).send({ error: err.message });
+    }
+  });
+});
+
 export const getColumnsForTables = functions.https.onRequest((req, res) => {
   corsHandler(req, res, async () => {
     if (req.method !== "POST") {

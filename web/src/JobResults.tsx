@@ -1,8 +1,9 @@
 import React, { useContext, useState, useEffect } from "react";
 import { ThemeContext } from "./ThemeContext";
-import { checkJobStatus } from "./api";
+import { checkJobStatus, cancelJob } from "./api";
 import { useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
+import ShowText from "./ShowText";
 
 const formatBytes = (bytes: number): string => {
   if (bytes === 0) return "0 Bytes";
@@ -48,7 +49,9 @@ const JobResults: React.FC = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const tableName = urlParams.get("tableName");
   const { darkMode } = useContext(ThemeContext);
+  const [pressedStop, setPressedStop] = useState<boolean>(false);
   const [jobDetails, setJobDetails] = useState({
+    error: null,
     status: "NO_DATA",
     progress: 0,
     creationTime: null,
@@ -93,22 +96,29 @@ const JobResults: React.FC = () => {
   const remainingSeconds = elapsedSeconds % 60;
 
   const handleStopJob = () => {
-    console.log("Stopping the job...");
-    // TODO: Add functionality to actually stop the job.
+    if (jobId) {
+      cancelJob(jobId);
+      setPressedStop(true);
+    }
   };
 
   if (jobDetails.status === "NO_DATA") {
-    return <div>Fetching the job info...</div>;
+    return <ShowText text="Fetching the job info..." />;
   }
 
   const tableLink = `/table/${tableName}`;
 
   return (
     <div className="h-screen w-full flex flex-col items-center justify-center space-y-4">
-      {jobDetails.status !== "DONE" && (
+      {jobDetails.error && (
+        <h1 className={`text-xl ${darkMode ? "text-red-500" : "text-red-600"}`}>
+          Error: {jobDetails.error}
+        </h1>
+      )}
+      {!jobDetails.error && jobDetails.status !== "DONE" && (
         <>
           <h1 className="text-xl text-orange-500 font-bold">
-            {jobDetails.status}
+            job status: {jobDetails.status}
           </h1>
           <div className="relative bg-gray-300 w-64 h-4 rounded-md shadow">
             <div
@@ -124,12 +134,12 @@ const JobResults: React.FC = () => {
             onClick={handleStopJob}
             className="bg-red-500 text-white py-1 px-4 rounded hover:bg-red-600 active:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
           >
-            Stop
+            {pressedStop ? "Please wait..." : "Stop the job"}
           </button>
         </>
       )}
 
-      {jobDetails.status === "DONE" && (
+      {!jobDetails.error && jobDetails.status === "DONE" && (
         <div className="flex space-y-4 items-center flex-col">
           <h1 className="text-xl text-green-500 font-bold">DONE!</h1>
           <p className="text-sm">

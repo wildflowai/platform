@@ -8,16 +8,26 @@ import ShowText from "./ShowText";
 const DataTableLink: React.FC = () => {
   const [data, setData] = useState<any[]>([]);
   const { tableName } = useParams<{ tableName: string }>();
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   useEffect(() => {
     if (tableName !== undefined) {
       const [datasetId, tableId] = tableName.split(".");
-      getColumnsForTable(datasetId, tableId).then((myData) => setData(myData));
+      getColumnsForTable(datasetId, tableId).then((myData) => {
+        if (myData.success) {
+          setData(myData.data);
+        } else {
+          setErrorMessage(myData.message);
+        }
+      });
     }
   }, []);
 
   if (tableName === undefined) {
     return <ShowText text="Table name is not defined..." />;
+  }
+  if (errorMessage !== "") {
+    return <ShowText text={`Failed fetching the table: ${errorMessage}`} />;
   }
   if (data.length === 0) {
     return <ShowText text="Loading the table data..." />;

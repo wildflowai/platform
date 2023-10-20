@@ -12,7 +12,9 @@ const DataTable: React.FC<Props> = ({ tableName, onReturnBack }) => {
 
   useEffect(() => {
     const [datasetId, tableId] = tableName.split(".");
-    getColumnsForTable(datasetId, tableId).then((myData) => setData(myData));
+    getColumnsForTable(datasetId, tableId).then((myData) =>
+      setData(myData.data)
+    );
   }, []);
 
   if (data.length === 0) {
