@@ -59,7 +59,31 @@ export const mergeTablesMinDistance = functions.https.onRequest((req, res) => {
     }
     const projectId = req.body.projectId;
     const data = req.body.payload;
-    return res.status(200).send(generateSQLCode(projectId, data));
+    const newTableName = req.body.newTableName;
+    const code = generateSQLCode(projectId, newTableName, data);
+    if (req.body.noRunOnlyCode) {
+      return res.status(200).send(code);
+    }
+
+    const bqClient = getBigQueryClient(projectId);
+    try {
+      const [job] = await bqClient.createQueryJob({
+        query: code,
+        location: "US",
+      });
+      const monitoringUrl =
+        `https://console.cloud.google.com/bigquery?project=` +
+        `${projectId}&j=bq:${job.id}&page=queryresults`;
+      return res.status(200).send({
+        message: "Job started",
+        jobID: job.id,
+        monitoringUrl: monitoringUrl,
+      });
+    } catch (err: any) {
+      return res
+        .status(500)
+        .send({ error: `Failed to start BigQuery job: ${err.message}` });
+    }
   });
 });
 

@@ -28,6 +28,7 @@ const SelectColumns: React.FC<Props> = ({ tables, returnCallBack }) => {
   const [data, setData] = useState<Record<string, any[]>>({});
   const [finalConfirmation, setFinalConfirmation] = useState<boolean>(false);
   const [inspectingTable, setInspectingTable] = useState<string>("");
+  const [outputTable, setOutputTable] = useState("raw.results");
 
   useEffect(() => {
     getColumnsForTables(tables).then((data) => {
@@ -55,6 +56,14 @@ const SelectColumns: React.FC<Props> = ({ tables, returnCallBack }) => {
       setData(initialState);
     });
   }, []);
+
+  const isValidOutputTable = (name: string) => {
+    const parts = name.split(".");
+    if (parts.length !== 2) return false;
+
+    const regex = /^[a-z_][a-z\d_]*$/;
+    return parts.every((part) => regex.test(part));
+  };
 
   const handleInputChange = (
     table: TableKey,
@@ -128,6 +137,12 @@ const SelectColumns: React.FC<Props> = ({ tables, returnCallBack }) => {
       if (date.length !== 1) {
         return `Table ${tableName} must have exactly one date column selected.`;
       }
+      if (!isValidOutputTable(outputTable)) {
+        return (
+          `Output table name must have one dot and each ` +
+          `part must start with a letter or an underscore.`
+        );
+      }
     }
     if (duplicates.size) {
       return `Duplicate column names: ${Array.from(duplicates).join(", ")}`;
@@ -190,6 +205,26 @@ const SelectColumns: React.FC<Props> = ({ tables, returnCallBack }) => {
         </div>
       )}
 
+      <div className="mb-4 p-2 rounded-lg flex flex-row items-center">
+        <label className="block text-sm font-medium">Output table:</label>
+        <input
+          type="text"
+          value={outputTable}
+          onChange={(e) => {
+            const value = e.target.value.toLowerCase();
+            setOutputTable(value);
+          }}
+          className={`${
+            isValidOutputTable(outputTable)
+              ? ""
+              : darkMode
+              ? "bg-red-800"
+              : "bg-red-200"
+          } px-4 py-2 rounded border border-gray-300 text-gray-800 ml-2 w-1/2`}
+          placeholder="raw.results"
+        />
+      </div>
+
       <table className="w-full max-w-3xl text-sm table-fixed mx-auto">
         <thead>
           <tr>
@@ -209,9 +244,12 @@ const SelectColumns: React.FC<Props> = ({ tables, returnCallBack }) => {
                     colSpan={3}
                     className={`py-1 text-left font-bold ${
                       tableIndex ? "pt-8" : ""
-                    }`}
+                    } ${darkMode ? "text-blue-300" : "text-blue-600"}`}
                   >
-                    <button onClick={() => setInspectingTable(tableInfo.table)}>
+                    <button
+                      onClick={() => setInspectingTable(tableInfo.table)}
+                      className="underline"
+                    >
                       {tableInfo.table}
                     </button>
                   </td>

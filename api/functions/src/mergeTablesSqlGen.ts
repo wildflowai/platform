@@ -15,7 +15,11 @@ const shortTableName = (tableKey: TableKey) => {
   return "t" + tableKey.split("|")[1];
 };
 
-export const generateSQLCode = (projectId: string, data: DataStructure) => {
+export const generateSQLCode = (
+  projectId: string,
+  newTableName: string,
+  data: DataStructure
+) => {
   const allTableKeys = Object.keys(data);
   const mainTableKey = allTableKeys.find((tableKey) =>
     tableKey.endsWith("|0")
@@ -130,13 +134,12 @@ export const generateSQLCode = (projectId: string, data: DataStructure) => {
     mainTableKey
   )}`;
 
-  const newTableName = "raw.results";
   return [
     `create or replace table \`${projectId}.${newTableName}\` as (`,
     [
-      "    with",
-      locations,
-      minDistances,
+      allTableKeys.length > 1 ? "    with" : "",
+      allTableKeys.length > 1 ? locations : "",
+      allTableKeys.length > 1 ? minDistances : "",
       selectStatement,
       mainTable,
       leftJoins,

@@ -5,8 +5,8 @@ const token = (): string => {
   return localStorage.getItem("wildflow-invite-token") || "no-invite-token";
 };
 
-// const _BACKEND_DOMAIN = "http://127.0.0.1:5001/wildflow-demo/us-central1";
-const _BACKEND_DOMAIN = "https://us-central1-wildflow-demo.cloudfunctions.net";
+const _BACKEND_DOMAIN = "http://127.0.0.1:5001/wildflow-demo/us-central1";
+// const _BACKEND_DOMAIN = "https://us-central1-wildflow-demo.cloudfunctions.net";
 
 export const getAllTablesForProject = async () => {
   const response = await fetch(`${_BACKEND_DOMAIN}/listDatasetsForProject`, {
@@ -37,6 +37,7 @@ export const mergeTablesMinDistance = async (
       noRunOnlyCode: noRunOnlyCode,
       projectId: projectId(),
       payload: data,
+      newTableName: "raw.merged_table",
     }),
   });
   return response.text();
