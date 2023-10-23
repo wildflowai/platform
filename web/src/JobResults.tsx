@@ -4,6 +4,8 @@ import { checkJobStatus, cancelJob } from "./api";
 import { useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import ShowText from "./ShowText";
+import { bucketId } from "./api";
+import DownloadFile from "./DownloadFile";
 
 const formatBytes = (bytes: number): string => {
   if (bytes === 0) return "0 Bytes";
@@ -48,6 +50,7 @@ const progressPercentageToShow = (jobDetails: any) => {
 const JobResults: React.FC = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const tableName = urlParams.get("tableName");
+  const filePath = urlParams.get("filePath");
   const { darkMode } = useContext(ThemeContext);
   const [pressedStop, setPressedStop] = useState<boolean>(false);
   const [jobDetails, setJobDetails] = useState({
@@ -107,6 +110,7 @@ const JobResults: React.FC = () => {
   }
 
   const tableLink = `/table/${tableName}`;
+  const fileLink = `https://console.cloud.google.com/storage/browser/_details/${bucketId()}/${filePath}`;
 
   return (
     <div className="h-screen w-full flex flex-col items-center justify-center space-y-4">
@@ -142,9 +146,11 @@ const JobResults: React.FC = () => {
       {!jobDetails.error && jobDetails.status === "DONE" && (
         <div className="flex space-y-4 items-center flex-col">
           <h1 className="text-xl text-green-500 font-bold">DONE!</h1>
-          <p className="text-sm">
-            Processed: {formatBytes(Number(jobDetails.totalBytesProcessed))}
-          </p>
+          {jobDetails.totalBytesProcessed && (
+            <p className="text-sm">
+              Processed: {formatBytes(Number(jobDetails.totalBytesProcessed))}
+            </p>
+          )}
           <p className="text-sm">
             Elapsed: {getElapsedTime()}, finished: {getTimeSinceCompletion()}{" "}
             ago
@@ -158,6 +164,20 @@ const JobResults: React.FC = () => {
             >
               {tableName}
             </Link>
+          )}
+          {filePath && (
+            <div className="flex flex-col items-center">
+              Your file in the bucket:{" "}
+              <Link
+                to={fileLink}
+                className={`${
+                  darkMode ? "text-blue-300" : "text-blue-500"
+                } underline font-bold`}
+              >
+                {filePath}
+              </Link>
+              <DownloadFile filePath={filePath} />
+            </div>
           )}
         </div>
       )}

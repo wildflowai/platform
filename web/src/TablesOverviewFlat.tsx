@@ -1,6 +1,10 @@
 import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import { ThemeContext } from "./ThemeContext";
+import { FaDownload } from "react-icons/fa";
+import { exportTableToCsv } from "./api";
+import { useNavigate } from "react-router-dom";
+import ShowText from "./ShowText";
 
 type DataSet = {
   datasetId: string;
@@ -15,7 +19,25 @@ type Props = {
 };
 
 const TablesOverviewFlat: React.FC<Props> = ({ data }) => {
+  const navigate = useNavigate();
   const { darkMode } = useContext(ThemeContext);
+  const [exportingTable, setExportingTable] = React.useState("");
+
+  const handleOnClick = (tableName: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    setExportingTable(tableName);
+    const filePath = tableName + "_" + new Date().toISOString() + ".csv";
+    exportTableToCsv(tableName, filePath).then((data) => {
+      console.log("data>>>", JSON.stringify(data, null, 2));
+      const jobId = data.jobID.replace("wildflow-pelagic:US.", "");
+      navigate(`/job/${jobId}?filePath=${filePath}`);
+    });
+  };
+
+  if (exportingTable !== "") {
+    return <ShowText text={`Exporting table ${exportingTable} to CSV...`} />;
+  }
+
   return (
     <div className="flex justify-center p-4 w-full h-full">
       <div className="w-1/2 h-full overflow-y-auto">
@@ -31,19 +53,26 @@ const TablesOverviewFlat: React.FC<Props> = ({ data }) => {
               <th className="block md:table-cell px-2 py-1 text-right">
                 NRows
               </th>
+              <th className="block md:table-cell px-2 py-1 text-right">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="block md:table-row-group">
             {data.map((item) => (
-              <Link
-                to={`/table/${item.datasetId}.${item.id}`}
-                className={`h-block md:table-row hover:bg-blue-500 dark:hover:bg-blue-300 ${
+              <tr
+                key={`${item.datasetId}.${item.id}`}
+                className={`block md:table-row ${
                   darkMode ? "text-white" : "text-black"
                 }`}
-                key={`${item.datasetId}.${item.id}`}
               >
-                <td className="block md:table-cell px-2 py-1 h-px leading-none p-0 text-left border md:border-none">
-                  {`${item.datasetId}.${item.id}`}
+                <td className="block md:table-cell px-2 py-1 text-left border md:border-none">
+                  <Link
+                    to={`/table/${item.datasetId}.${item.id}`}
+                    className={`hover:bg-blue-500 dark:hover:bg-blue-300`}
+                  >
+                    {`${item.datasetId}.${item.id}`}
+                  </Link>
                 </td>
                 <td className="block md:table-cell px-2 py-1 text-right border md:border-none">
                   {item.size}
@@ -51,7 +80,16 @@ const TablesOverviewFlat: React.FC<Props> = ({ data }) => {
                 <td className="block md:table-cell px-2 py-1 text-right border md:border-none">
                   {item.numRows}
                 </td>
-              </Link>
+                <td className="block md:table-cell px-2 py-1 text-right border md:border-none">
+                  <button
+                    onClick={(e) =>
+                      handleOnClick(item.datasetId + "." + item.id, e)
+                    }
+                  >
+                    <FaDownload />
+                  </button>
+                </td>
+              </tr>
             ))}
           </tbody>
         </table>

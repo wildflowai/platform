@@ -2,6 +2,7 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import * as postgres from "postgres";
 import * as dotenv from "dotenv";
+import { Storage } from "@google-cloud/storage";
 import { BigQuery } from "@google-cloud/bigquery";
 import * as cors from "cors";
 import * as fs from "fs";
@@ -43,6 +44,50 @@ const checkRequestToken = (req: any): boolean => {
   return token && MY_HASH_TOKEN && hashToken(token) === MY_HASH_TOKEN;
 };
 
+export const downloadFile = functions.https.onRequest(async (req, res) => {
+  corsHandler(req, res, async () => {
+    // console.log(JSON.stringify(req, null, 2));
+    if (req.method !== "POST") {
+      return res.status(405).send("Method Not Allowed");
+    }
+
+    if (!checkRequestToken(req)) {
+      return res.status(401).send("Unauthorized");
+    }
+
+    const bucketName = req.body.bucketName;
+    const filePath = req.body.filePath;
+    const projectId = req.body.projectId;
+
+    if (!filePath || !bucketName || !projectId) {
+      return res
+        .status(400)
+        .send("Bad Request: fileName, bucketName, projectId are required");
+    }
+
+    const options = {
+      version: "v4" as const,
+      action: "read" as const,
+      expires: Date.now() + 15 * 60 * 1000, // 15 minutes
+    };
+
+    try {
+      const storage = new Storage();
+      const urlResponse = await storage
+        .bucket(bucketName)
+        .file(filePath)
+        .getSignedUrl(options);
+
+      const url = urlResponse[0];
+
+      return res.status(200).json({ url });
+    } catch (error) {
+      console.error("Error creating signed URL:", error);
+      return res.status(500).send("Internal Server Error");
+    }
+  });
+});
+
 export const mergeTablesMinDistance = functions.https.onRequest((req, res) => {
   corsHandler(req, res, async () => {
     if (req.method !== "POST") {
@@ -83,6 +128,54 @@ export const mergeTablesMinDistance = functions.https.onRequest((req, res) => {
       return res
         .status(500)
         .send({ error: `Failed to start BigQuery job: ${err.message}` });
+    }
+  });
+});
+
+export const exportTableToCSV = functions.https.onRequest(async (req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== "POST") {
+      res.status(405).send({
+        error: "Invalid request method. Only POST requests are allowed.",
+      });
+      return;
+    }
+
+    if (!checkRequestToken(req)) {
+      res.status(401).send({
+        error: "Invalid token",
+      });
+      return;
+    }
+
+    const projectId = req.body.projectId;
+    const tableName = req.body.tableName;
+    const bucketName = req.body.bucketName;
+    const filePath = req.body.filePath;
+
+    const bqClient = getBigQueryClient(projectId);
+    const storage = new Storage(projectId);
+
+    try {
+      const [datasetId, tableId] = tableName.split(".");
+      const destination = storage.bucket(bucketName).file(filePath);
+
+      const [job] = await bqClient
+        .dataset(datasetId)
+        .table(tableId)
+        .extract(destination, {
+          format: "CSV",
+        });
+
+      res.status(200).send({
+        message: "Export job started",
+        jobID: job.id,
+      });
+    } catch (err: any) {
+      console.error("Failed to start export job:", err);
+      res
+        .status(500)
+        .send({ error: `Failed to start export job: ${err.message}` });
     }
   });
 });

@@ -5,6 +5,10 @@ const token = (): string => {
   return localStorage.getItem("wildflow-invite-token") || "no-invite-token";
 };
 
+export const bucketId = (): string => {
+  return "pelagioskakunja";
+};
+
 //const _BACKEND_DOMAIN = "http://127.0.0.1:5001/wildflow-demo/us-central1";
 const _BACKEND_DOMAIN = "https://us-central1-wildflow-demo.cloudfunctions.net";
 
@@ -95,6 +99,40 @@ export const cancelJob = async (jobId: string) => {
     }),
   });
   return await response.json();
+};
+
+// {"message":"Export job started","jobID":"wildflow-pelagic:US.5d89717d-37e0-4f8c-b66f-e61533f36377"}
+export const exportTableToCsv = async (tableName: string, filePath: string) => {
+  const response = await fetch(`${_BACKEND_DOMAIN}/exportTableToCSV`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      token: token(),
+      projectId: projectId(),
+      tableName: tableName,
+      bucketName: bucketId(),
+      filePath: filePath,
+    }),
+  });
+  return response.json();
+};
+
+export const downloadFile = async (filePath: string) => {
+  const response = await fetch(`${_BACKEND_DOMAIN}/downloadFile`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      token: token(),
+      projectId: projectId(),
+      bucketName: bucketId(),
+      filePath: filePath,
+    }),
+  });
+  return response.json();
 };
 
 export const getColumnsForTables = async (tables: string[]) => {
