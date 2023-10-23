@@ -14,6 +14,8 @@ import { Routes, Route } from "react-router-dom";
 import JobResults from "./JobResults";
 import { BrowserRouter } from "react-router-dom";
 import DataTableLink from "./DataTableLink";
+import TablesOverview from "./TablesOverview";
+import { projectId } from "./api";
 
 const App: React.FC = () => {
   const [selectedPageName, setSelectedPageName] = useState<string>("Explorer");
@@ -57,7 +59,8 @@ const App: React.FC = () => {
                   <Route path="/explorer" element={<Explorer />} />
                   <Route path="/" element={<Explorer />} />
                   <Route path="/files" element={<Files />} />
-                  <Route path="/datasets" element={<Datasets />} />
+                  <Route path="/datasets" element={<TablesOverview />} />
+                  {/* <Route path="/datasets" element={<Datasets />} /> */}
                   <Route path="/workflows" element={<MergeTables />} />
                   <Route path="/query" element={<Query />} />
                   <Route path="/settings" element={<Settings />} />
