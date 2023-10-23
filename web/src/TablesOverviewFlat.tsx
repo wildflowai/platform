@@ -64,7 +64,7 @@ const TablesOverviewFlat: React.FC<Props> = ({ data }) => {
                 key={`${item.datasetId}.${item.id}`}
                 className={`block md:table-row ${
                   darkMode ? "text-white" : "text-black"
-                }`}
+                } hover:bg-blue-500 dark:hover:bg-blue-300`}
               >
                 <td className="block md:table-cell px-2 py-1 text-left border md:border-none">
                   <Link
