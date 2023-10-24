@@ -15,7 +15,7 @@ import JobResults from "./JobResults";
 import { BrowserRouter } from "react-router-dom";
 import DataTableLink from "./DataTableLink";
 import TablesOverview from "./TablesOverview";
-import { projectId } from "./api";
+import Upload from "./Upload";
 
 const App: React.FC = () => {
   const [selectedPageName, setSelectedPageName] = useState<string>("Explorer");
@@ -60,6 +60,7 @@ const App: React.FC = () => {
                   <Route path="/" element={<Explorer />} />
                   <Route path="/files" element={<Files />} />
                   <Route path="/datasets" element={<TablesOverview />} />
+                  <Route path="/upload" element={<Upload />} />
                   {/* <Route path="/datasets" element={<Datasets />} /> */}
                   <Route path="/workflows" element={<MergeTables />} />
                   <Route path="/query" element={<Query />} />

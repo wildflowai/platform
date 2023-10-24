@@ -3,6 +3,7 @@ import TablesOverviewFlat from "./TablesOverviewFlat";
 import ShowText from "./ShowText";
 import { projectId, getAllTablesForProject } from "./api";
 import Datasets from "./Datasets";
+import UploadFileButton from "./UploadFileButton";
 
 const TablesOverview = () => {
   const [data, setData] = useState<any>(null);
@@ -27,9 +28,19 @@ const TablesOverview = () => {
   }
 
   if (!data) {
-    return <ShowText text="Loading a list of tables..." />;
+    return (
+      <>
+        <UploadFileButton />
+        <ShowText text="Loading a list of tables..." />
+      </>
+    );
   }
-  return <TablesOverviewFlat data={data} />;
+  return (
+    <>
+      <UploadFileButton />
+      <TablesOverviewFlat data={data} />
+    </>
+  );
 };
 
 export default TablesOverview;
