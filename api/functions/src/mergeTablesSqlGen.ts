@@ -65,8 +65,10 @@ export const generateSQLCode = (
         array_agg(
           struct(b.${bName}_lat, b.${bName}_lon)
           order by st_distance(
-            st_geogpoint(a.${aName}_lon, a.${aName}_lat),
-            st_geogpoint(b.${bName}_lon, b.${bName}_lat))
+            st_geogpoint(cast(a.${aName}_lon as float64),
+                         cast(a.${aName}_lat as float64)),
+            st_geogpoint(cast(b.${bName}_lon as float64),
+                         cast(b.${bName}_lat as float64)))
           limit 1
         )[offset(0)].*
       from ${aName}_locations a
