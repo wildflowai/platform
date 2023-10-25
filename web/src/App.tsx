@@ -17,6 +17,7 @@ import DataTableLink from "./DataTableLink";
 import TablesOverview from "./TablesOverview";
 import Upload from "./Upload";
 import Ingest from "./Ingest";
+import JobsOverview from "./JobsOverview";
 
 const App: React.FC = () => {
   const [selectedPageName, setSelectedPageName] = useState<string>("Explorer");
@@ -55,6 +56,7 @@ const App: React.FC = () => {
               >
                 <Routes>
                   <Route path="/job/:jobId" element={<JobResults />} />
+                  <Route path="/jobs" element={<JobsOverview />} />
                   <Route path="/table/:tableName" element={<DataTableLink />} />
                   <Route path="/ingest/*" element={<Ingest />} />
                   <Route path="/mergetables" element={<MergeTables />} />

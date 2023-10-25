@@ -481,6 +481,49 @@ export const checkJobStatus = functions.https.onRequest(async (req, res) => {
   });
 });
 
+export const getJobsList = functions.https.onRequest(async (req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== "POST") {
+      return res.status(405).send({
+        error: "Invalid request method. Only POST requests are allowed.",
+      });
+    }
+
+    if (!checkRequestToken(req)) {
+      return res.status(401).send({
+        error: "Invalid token",
+      });
+    }
+
+    const projectId = req.body.projectId;
+    const maxResults = req.body.maxResults;
+
+    if (!projectId) {
+      return res.status(400).send({ error: "Project ID is required." });
+    }
+
+    const bqClient = getBigQueryClient(projectId);
+    const options: any = {
+      maxResults: maxResults,
+    };
+
+    try {
+      const [jobs] = await bqClient.getJobs(options);
+      const jobsInfo = jobs.map((job) => ({
+        jobId: job.id,
+        status: job.metadata.status.state,
+        creationTime: job.metadata.statistics.creationTime,
+        endTime: job.metadata.statistics.endTime || "Still running",
+      }));
+
+      return res.status(200).send({ jobs: jobsInfo });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).send({ error: "Internal Server Error" });
+    }
+  });
+});
+
 export const cancelJob = functions.https.onRequest(async (req, res) => {
   corsHandler(req, res, async () => {
     if (req.method !== "POST") {

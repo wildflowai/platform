@@ -117,6 +117,32 @@ export const checkJobStatus = async (jobId: string) => {
   return await response.json();
 };
 
+export const getJobsList = async (maxResults?: number) => {
+  const requestBody: any = {
+    token: token(),
+    projectId: projectId(),
+  };
+
+  if (maxResults) {
+    requestBody.maxResults = maxResults;
+  }
+
+  const response = await fetch(`${_BACKEND_DOMAIN}/getJobsList`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!response.ok) {
+    console.error("Network response was not ok");
+    return;
+  }
+
+  return await response.json();
+};
+
 export const cancelJob = async (jobId: string) => {
   const response = await fetch(`${_BACKEND_DOMAIN}/cancelJob`, {
     method: "POST",
