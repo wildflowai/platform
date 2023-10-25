@@ -27,6 +27,9 @@ const DataTableFlat: React.FC<Props> = ({ data }) => {
         Header: key,
         accessor: (row: any) => {
           const cellValue = row[key];
+          if (!cellValue || cellValue === undefined) {
+            return "NULL";
+          }
 
           if (
             key.toLowerCase() === "timestamp" &&

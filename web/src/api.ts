@@ -9,16 +9,10 @@ export const bucketId = (): string => {
   return "pelagioskakunja";
 };
 
-//const _BACKEND_DOMAIN = "http://127.0.0.1:5001/wildflow-demo/us-central1";
+// const _BACKEND_DOMAIN = "http://127.0.0.1:5001/wildflow-demo/us-central1";
 const _BACKEND_DOMAIN = "https://us-central1-wildflow-demo.cloudfunctions.net";
 
 export const getAllTablesForProject = async () => {
-  const key = "allTablesForProject" + projectId();
-  const cachedData = sessionStorage.getItem(key);
-  if (cachedData) {
-    return JSON.parse(cachedData);
-  }
-
   const response = await fetch(`${_BACKEND_DOMAIN}/listDatasetsForProject`, {
     method: "POST",
     headers: {
@@ -30,9 +24,7 @@ export const getAllTablesForProject = async () => {
     }),
   });
 
-  const data = await response.json();
-  sessionStorage.setItem(key, JSON.stringify(data));
-  return data;
+  return await response.json();
 };
 
 export const mergeTablesMinDistance = async (
@@ -58,6 +50,45 @@ export const mergeTablesMinDistance = async (
   } else {
     return response.json();
   }
+};
+
+export const uploadFile = async (file: File, destinationFileName: string) => {
+  const response = await fetch(`${_BACKEND_DOMAIN}/generateUploadUrl`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      token: token(),
+      bucketName: bucketId(),
+      filePath: destinationFileName,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorMessage = await response.text();
+    throw new Error(`Failed to get signed URL: ${errorMessage}`);
+  }
+
+  const { url } = await response.json();
+  console.log("Uploading file to: " + url);
+
+  const uploadResponse = await fetch(url, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/octet-stream",
+    },
+    body: file,
+  });
+
+  console.log("Upload respnse", JSON.stringify(uploadResponse, null, 2));
+
+  if (!uploadResponse.ok) {
+    const uploadErrorMessage = await uploadResponse.text();
+    throw new Error(`Upload failed: ${uploadErrorMessage}`);
+  }
+
+  return "File uploaded successfully";
 };
 
 // example response is:
@@ -116,6 +147,41 @@ export const exportTableToCsv = async (tableName: string, filePath: string) => {
       filePath: filePath,
     }),
   });
+  return response.json();
+};
+
+export const ingestCsvFromGcsToBigQuery = async (
+  filePath: string,
+  headers: string[],
+  hasHeader: boolean,
+  tableName: string,
+  bucketName: string = bucketId()
+) => {
+  const [datasetId, tableId] = tableName.split(".");
+  const response = await fetch(
+    `${_BACKEND_DOMAIN}/ingestCsvFromGcsToBigQuery`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        token: token(),
+        projectId: projectId(),
+        datasetId: datasetId,
+        tableId: tableId,
+        headers: headers,
+        hasHeader: hasHeader,
+        bucketName: bucketName,
+        filePath: filePath,
+      }),
+    }
+  );
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to start import job: ${errorText}`);
+  }
   return response.json();
 };
 

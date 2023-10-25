@@ -2,6 +2,7 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import * as postgres from "postgres";
 import * as dotenv from "dotenv";
+import * as os from "os";
 import { Storage } from "@google-cloud/storage";
 import { BigQuery } from "@google-cloud/bigquery";
 import * as cors from "cors";
@@ -9,11 +10,22 @@ import * as fs from "fs";
 import * as path from "path";
 import { generateSQLCode } from "./mergeTablesSqlGen";
 import * as crypto from "crypto";
+import * as stream from "stream";
+
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
 
 dotenv.config();
 
-const { PGHOST, PGDATABASE, PGUSER, PGPASSWORD, ENDPOINT_ID, MY_HASH_TOKEN } =
-  process.env;
+const {
+  PGHOST,
+  PGDATABASE,
+  PGUSER,
+  PGPASSWORD,
+  ENDPOINT_ID,
+  MY_HASH_TOKEN,
+  MY_GOOGLE_APPLICATION_CREDENTIALS,
+} = process.env;
 
 const corsHandler = cors({ origin: true });
 const bigquery = new BigQuery();
@@ -72,7 +84,10 @@ export const downloadFile = functions.https.onRequest(async (req, res) => {
     };
 
     try {
-      const storage = new Storage();
+      const storage = new Storage({
+        projectId: projectId,
+        keyFilename: MY_GOOGLE_APPLICATION_CREDENTIALS,
+      });
       const urlResponse = await storage
         .bucket(bucketName)
         .file(filePath)
@@ -128,6 +143,232 @@ export const mergeTablesMinDistance = functions.https.onRequest((req, res) => {
       return res
         .status(500)
         .send({ error: `Failed to start BigQuery job: ${err.message}` });
+    }
+  });
+});
+
+export const ingestCsvFromGcsToBigQuery = functions.https.onRequest(
+  (req, res) => {
+    corsHandler(req, res, async () => {
+      if (req.method !== "POST") {
+        res.status(405).send({
+          error: "Invalid request method. Only POST requests are allowed.",
+        });
+        return;
+      }
+
+      if (!checkRequestToken(req)) {
+        res.status(401).send({
+          error: "Invalid token",
+        });
+        return;
+      }
+
+      const projectId = req.body.projectId;
+      const datasetId = req.body.datasetId;
+      const tableId = req.body.tableId;
+      const headers = req.body.headers;
+      const hasHeader = req.body.hasHeader;
+      const bucketName = req.body.bucketName;
+      const filePath = req.body.filePath;
+
+      const bqClient = getBigQueryClient(projectId);
+
+      const storage = new Storage({
+        projectId: projectId,
+        keyFilename: MY_GOOGLE_APPLICATION_CREDENTIALS,
+      });
+
+      const file = storage.bucket(bucketName).file(filePath);
+      const schema = headers.map((header: string) => ({
+        name: header,
+        type: "STRING",
+      }));
+      const options = {
+        location: "US",
+        skipLeadingRows: hasHeader ? 1 : 0,
+        schema: {
+          fields: schema,
+        },
+        sourceFormat: "CSV",
+        autodetect: false,
+      };
+
+      try {
+        const [job] = await bqClient
+          .dataset(datasetId)
+          .table(tableId)
+          .load(file, options);
+
+        return res.status(200).send({
+          message: "Job started",
+          jobID: job.id,
+        });
+      } catch (err: any) {
+        console.error("Error while starting BigQuery job:", err.message || err);
+        return res.status(500).send({
+          error: `Failed to start BigQuery job: ${err.message || err}`,
+        });
+      }
+    });
+  }
+);
+
+export const generateUploadUrl = functions.https.onRequest((req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== "POST") {
+      res.status(405).send({
+        error: "Invalid request method. Only POST requests are allowed.",
+      });
+      return;
+    }
+    if (!checkRequestToken(req)) {
+      return res.status(401).send({ error: "Invalid token" });
+    }
+
+    const projectId = req.body.projectId;
+    const bucketName = req.body.bucketName;
+    const filePath = req.body.filePath;
+
+    const options = {
+      version: "v4" as const,
+      action: "write" as const,
+      expires: Date.now() + 15 * 60 * 1000, // 15 minutes
+      contentType: "application/octet-stream" as const,
+    };
+
+    try {
+      const storage = new Storage({
+        projectId: projectId,
+        keyFilename: MY_GOOGLE_APPLICATION_CREDENTIALS,
+      });
+
+      const urlResponse = await storage
+        .bucket(bucketName)
+        .file(filePath)
+        .getSignedUrl(options);
+      const url = urlResponse[0];
+      return res.status(200).send({ url });
+    } catch (err) {
+      console.error("Error generating signed URL:", err);
+      return res.status(500).send("Internal Server Error");
+    }
+  });
+});
+
+export const loadFileToGcs = functions.https.onRequest((req, res) => {
+  corsHandler(req, res, async () => {
+    upload.single("file")(req, res, async (err: any) => {
+      if (err instanceof multer.MulterError) {
+        return res.status(500).send({ error: err.message });
+      } else if (err) {
+        return res.status(500).send({ error: err.message });
+      }
+
+      // Now req.file is available
+      const bucketName = req.body.bucketName;
+      const destinationFileName =
+        req.body.destinationFileName || "uploaded-file";
+
+      try {
+        const storage = new Storage();
+        const bucket = storage.bucket(bucketName);
+        const file = bucket.file(destinationFileName);
+
+        const bufferStream = new stream.PassThrough();
+        bufferStream.end((req as any).files.file[0].buffer);
+        const writeStream = file.createWriteStream();
+        bufferStream.pipe(writeStream);
+
+        writeStream.on("finish", () => {
+          res.status(200).send({
+            message: "File successfully uploaded to Google Cloud Storage",
+          });
+        });
+      } catch (err: any) {
+        console.error("Error uploading file to Google Cloud Storage:", err);
+        return res.status(500).send({
+          error: `Failed to upload file to Google Cloud Storage: ${err.message}`,
+        });
+      }
+      return res.status(200).send({ message: "File successfully uploaded" });
+    });
+  });
+});
+
+export const createTableFromCSV = functions.https.onRequest((req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== "POST") {
+      res.status(405).send({
+        error: "Invalid request method. Only POST requests are allowed.",
+      });
+      return;
+    }
+    if (!checkRequestToken(req)) {
+      return res.status(401).send({ error: "Invalid token" });
+    }
+
+    const projectId = req.body.projectId;
+    const tableName = req.body.tableName;
+    const headers = req.body.headers;
+    const rows = req.body.rows;
+
+    const bqClient = getBigQueryClient(projectId);
+    const [datasetId, tableId] = tableName.split(".");
+
+    try {
+      // Specify the table schema
+      const schema = headers.map((header: string) => ({
+        name: header,
+        type: "STRING",
+      }));
+      console.log("Schema:", schema);
+
+      // Construct the CSV data
+      const csvData = [
+        headers.join(","),
+        ...rows.map((row: any) => row.join(",")),
+      ].join("\n");
+      console.log("CSV Data:", csvData);
+
+      // Write CSV data to a temporary file
+      const tempFilePath = path.join(
+        os.tmpdir(),
+        `${tableId}-${Date.now()}.csv`
+      );
+      fs.writeFileSync(tempFilePath, csvData);
+
+      const metadata = {
+        schema: {
+          fields: schema,
+        },
+        skipLeadingRows: 1,
+        sourceFormat: "CSV",
+        createDisposition: "CREATE_IF_NEEDED",
+        writeDisposition: "WRITE_TRUNCATE",
+      };
+
+      console.log(
+        "Metadata for BigQuery Load Job:",
+        JSON.stringify(metadata, null, 2)
+      );
+      const [job] = await bqClient
+        .dataset(datasetId)
+        .table(tableId)
+        .createLoadJob(tempFilePath, metadata);
+
+      // Delete the temporary file
+      fs.unlinkSync(tempFilePath);
+
+      return res.status(200).send({
+        message: "Job started",
+        jobID: job.id,
+      });
+    } catch (err: any) {
+      console.error("Error creating table and loading data:", err);
+      return res.status(500).send({
+        error: `Failed to create table and load data: ${err.message}`,
+      });
     }
   });
 });

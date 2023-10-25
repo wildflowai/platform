@@ -1,126 +1,160 @@
-import React, { useState, ChangeEvent, useEffect } from "react";
+import React, { useReducer, useEffect, ChangeEvent, useState } from "react";
+import ShowText from "./ShowText";
 
-interface ShowTextProps {
-  text: string;
+interface State {
+  headers: string[];
+  tableName: string;
+  hasHeader: boolean;
+  columnValidity: boolean[];
+  isTableNameValid: boolean;
+  error: string | null;
 }
 
-const ShowText: React.FC<ShowTextProps> = ({ text }) => <div>{text}</div>;
+interface Action {
+  type: string;
+  payload?: any;
+}
+
+const actionTypes = {
+  SET_HEADERS: "SET_HEADERS",
+  SET_TABLE_NAME: "SET_TABLE_NAME",
+  SET_HAS_HEADER: "SET_HAS_HEADER",
+  VALIDATE_HEADERS: "VALIDATE_HEADERS",
+  VALIDATE_TABLE_NAME: "VALIDATE_TABLE_NAME",
+};
+
+const validateHeaders = (headers: string[]): [boolean[], boolean] => {
+  const headerSet = new Set();
+  const validity = headers.map((header) => {
+    const isValidHeader = /^[A-Za-z_][A-Za-z0-9_]*$/.test(header);
+    if (!isValidHeader || headerSet.has(header)) {
+      return false;
+    }
+    headerSet.add(header);
+    return true;
+  });
+  return [validity, headerSet.size === headers.length];
+};
+
+const validateTableName = (tableName: string): boolean => {
+  return /^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(tableName);
+};
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case actionTypes.SET_HEADERS:
+      return { ...state, headers: action.payload };
+    case actionTypes.SET_TABLE_NAME:
+      return { ...state, tableName: action.payload };
+    case actionTypes.SET_HAS_HEADER:
+      return { ...state, hasHeader: action.payload };
+    case actionTypes.VALIDATE_HEADERS: {
+      const [newColumnValidity, headersValid] = validateHeaders(state.headers);
+      const error = !headersValid
+        ? "Column names must be unique, cannot start with a digit, and can only contain letters, digits, and underscores."
+        : null;
+      return { ...state, columnValidity: newColumnValidity, error };
+    }
+    case actionTypes.VALIDATE_TABLE_NAME: {
+      const isValid = validateTableName(state.tableName);
+      const error = isValid
+        ? null
+        : "Table name must be in the format dataset_id.table_id, and can only contain letters, digits, and underscores.";
+      return { ...state, isTableNameValid: isValid, error };
+    }
+    default:
+      return state;
+  }
+}
 
 interface PreviewAndIngestProps {
-  data: (string | null)[][];
-  onUpload: (
-    newHeaders: string[],
-    hasHeader: boolean,
-    newTableName: string
-  ) => void;
+  data: any[];
+  onIngest: (headers: string[], hasHeader: boolean, tableName: string) => void;
 }
 
 const PreviewAndIngest: React.FC<PreviewAndIngestProps> = ({
   data,
-  onUpload,
+  onIngest,
 }) => {
-  const [headers, setHeaders] = useState<string[]>(data[0].map(String));
-  const [tableName, setTableName] = useState<string>("raw.uploaded_table_name");
-  const [hasHeader, setHasHeader] = useState<boolean>(true);
-  const [columnValidity, setColumnValidity] = useState<boolean[]>(
-    headers.map(() => true)
-  );
-  const [isTableNameValid, setIsTableNameValid] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const initialState: State = {
+    headers: data[0]
+      .map(String)
+      .map((header: string) => header.replace(/\./g, "_")),
 
-  const validateHeaders = (headers: string[]): [boolean[], boolean] => {
-    const headerSet = new Set<string>();
-    const validity = headers.map((header) => {
-      const isValidHeader = /^[A-Za-z_][A-Za-z0-9_]*$/.test(header);
-      if (!isValidHeader || headerSet.has(header)) {
-        return false;
-      }
-      headerSet.add(header);
-      return true;
-    });
-    return [validity, headerSet.size === headers.length];
+    tableName: "raw.ingested_table_name",
+    hasHeader: true,
+    columnValidity: data[0].map(() => true),
+    isTableNameValid: true,
+    error: null,
   };
 
-  useEffect(() => {
-    const initialHeaders = hasHeader
-      ? data[0].map((header) => String(header).replace(/\./g, "_"))
-      : data[0].map((_, index) => `Column${index + 1}`);
-
-    setHeaders(initialHeaders);
-    const [newColumnValidity, headersValid] = validateHeaders(initialHeaders);
-    setColumnValidity(newColumnValidity);
-    setError(
-      !headersValid
-        ? "Column names must be unique, cannot start with a digit, and can only contain letters, digits, and underscores."
-        : null
-    );
-  }, [hasHeader, data]);
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log("Table Name State:", tableName);
-    console.log("Is Table Name Valid:", isTableNameValid);
-    console.log("Error State:", error);
+    dispatch({ type: actionTypes.VALIDATE_HEADERS });
+  }, [state.headers]);
 
-    if (
-      isTableNameValid &&
-      error ===
-        "Table name can only contain letters, digits, and underscores, and cannot start with a digit."
-    ) {
-      setError(null);
+  useEffect(() => {
+    dispatch({ type: actionTypes.VALIDATE_TABLE_NAME });
+  }, [state.tableName]);
+
+  useEffect(() => {
+    if (state.hasHeader) {
+      const initialHeaders = data[0].map((header: string) =>
+        String(header).replace(/\./g, "_")
+      );
+      dispatch({ type: actionTypes.SET_HEADERS, payload: initialHeaders });
+    } else {
+      const initialHeaders = data[0].map(
+        (_: any, index: any) => `Column${index + 1}`
+      );
+      dispatch({ type: actionTypes.SET_HEADERS, payload: initialHeaders });
     }
-  }, [tableName, isTableNameValid, error]);
+  }, [state.hasHeader, data]);
 
   const handleHeaderChange = (index: number, newName: string) => {
-    const newHeaders = [...headers];
+    const newHeaders = [...state.headers];
     newHeaders[index] = newName;
-
-    const [newColumnValidity, headersValid] = validateHeaders(newHeaders);
-    setHeaders(newHeaders);
-    setColumnValidity(newColumnValidity);
-    setError(
-      !headersValid
-        ? "Column names must be unique, cannot start with a digit, and can only contain letters, digits, and underscores."
-        : null
-    );
+    dispatch({ type: actionTypes.SET_HEADERS, payload: newHeaders });
   };
 
   const handleTableNameChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const newTableName = e.target.value;
-    setTableName(newTableName);
-    const isValid = /^[A-Za-z_][A-Za-z0-9_]*$/.test(newTableName);
-    setIsTableNameValid(isValid);
-
-    if (isValid) {
-      setError(null); // Clearing the error when the table name is valid
-    } else {
-      setError(
-        "Table name can only contain letters, digits, and underscores, and cannot start with a digit."
-      );
-    }
+    dispatch({ type: actionTypes.SET_TABLE_NAME, payload: e.target.value });
   };
 
   const handleHasHeaderChange = () => {
-    setHasHeader(!hasHeader);
+    dispatch({ type: actionTypes.SET_HAS_HEADER, payload: !state.hasHeader });
   };
 
-  const handleUpload = () => {
-    if (error || !isTableNameValid || columnValidity.includes(false)) return;
-    onUpload(headers, hasHeader, tableName);
+  const handleIngest = () => {
+    if (
+      state.error ||
+      !state.isTableNameValid ||
+      state.columnValidity.includes(false)
+    )
+      return;
+    setStatus("Starting ingestion job...");
+    onIngest(state.headers, state.hasHeader, state.tableName);
   };
 
-  const rowData = hasHeader ? data.slice(1) : data;
+  const rowData = state.hasHeader ? data.slice(1) : data;
+
+  if (status) {
+    return <ShowText text={status} />;
+  }
 
   return (
-    <div className="p-4" key={error}>
-      {error && (
+    <div className="p-4">
+      {state.error && (
         <div className="p-4 mb-4 bg-red-100 border border-red-400 text-red-700">
-          {error}
+          {state.error}
         </div>
       )}
       <label>
         <input
           type="checkbox"
-          checked={hasHeader}
+          checked={state.hasHeader}
           onChange={handleHasHeaderChange}
           className="mr-2"
         />
@@ -128,25 +162,25 @@ const PreviewAndIngest: React.FC<PreviewAndIngestProps> = ({
       </label>
       <input
         type="text"
-        value={tableName}
+        value={state.tableName}
         onChange={handleTableNameChange}
         placeholder="Your table name"
         className={`border p-2 w-full text-black ${
-          !isTableNameValid && "bg-red-300"
+          !state.isTableNameValid && "bg-red-300"
         }`}
       />
       <div className="overflow-x-auto">
         <table className="min-w-full">
           <thead>
             <tr>
-              {headers.map((header, index) => (
+              {state.headers.map((header, index) => (
                 <th key={index} className="border px-4 py-2">
                   <input
                     type="text"
                     value={header}
                     onChange={(e) => handleHeaderChange(index, e.target.value)}
                     className={`p-1 text-black font-normal ${
-                      !columnValidity[index] && "bg-red-300"
+                      !state.columnValidity[index] && "bg-red-300"
                     }`}
                   />
                 </th>
@@ -156,7 +190,7 @@ const PreviewAndIngest: React.FC<PreviewAndIngestProps> = ({
           <tbody>
             {rowData.map((row, rowIndex) => (
               <tr key={rowIndex}>
-                {row.map((value, index) => (
+                {row.map((value: any, index: any) => (
                   <td
                     key={index}
                     className={`border px-4 py-2 ${
@@ -172,17 +206,21 @@ const PreviewAndIngest: React.FC<PreviewAndIngestProps> = ({
         </table>
       </div>
       <button
-        onClick={handleUpload}
+        onClick={handleIngest}
         className={`mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ${
-          error || !isTableNameValid || columnValidity.includes(false)
+          state.error ||
+          !state.isTableNameValid ||
+          state.columnValidity.includes(false)
             ? "opacity-50 cursor-not-allowed"
             : ""
         }`}
         disabled={
-          Boolean(error) || !isTableNameValid || columnValidity.includes(false)
+          Boolean(state.error) ||
+          !state.isTableNameValid ||
+          state.columnValidity.includes(false)
         }
       >
-        Upload
+        Ingest
       </button>
     </div>
   );

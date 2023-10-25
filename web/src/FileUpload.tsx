@@ -19,7 +19,7 @@ const FileUpload: React.FC<{ onFileUpload: (file: File) => void }> = ({
   return (
     <div
       {...getRootProps()}
-      className="border-dashed border-4 p-10 text-center cursor-pointer border-gray-400"
+      className="border-dashed border-4 p-10 text-center cursor-pointer border-gray-400 p-4 flex items-center justify-center w-full"
     >
       <input {...getInputProps()} />
       {isDragActive ? (
