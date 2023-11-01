@@ -13,7 +13,6 @@ import {
   BsFillMoonFill,
   BsGraphUp,
 } from "react-icons/bs";
-import { TbPlus } from "react-icons/tb";
 import { LuWorkflow } from "react-icons/lu";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { ThemeContext } from "./ThemeContext";
@@ -30,7 +29,6 @@ const Sidebar: React.FC = () => {
   const [showText, setShowText] = React.useState(false);
 
   const buttons: VisibleButton[] = [
-    { Icon: TbPlus, text: "Upload", path: "/upload" },
     { Icon: AiOutlineDropbox, text: "Files", path: "/files" },
     { Icon: AiOutlineDatabase, text: "Datasets", path: "/datasets" },
     { Icon: AiOutlineGlobal, text: "Explorer", path: "/explorer" },

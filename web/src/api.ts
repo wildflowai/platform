@@ -1,3 +1,7 @@
+export const isPelagic = (): boolean => {
+  return localStorage.getItem("wildflow-project-id") !== null;
+};
+
 export const projectId = (): string => {
   return localStorage.getItem("wildflow-project-id") || "no-projectId";
 };
@@ -9,7 +13,7 @@ export const bucketId = (): string => {
   return "pelagioskakunja";
 };
 
-// const _BACKEND_DOMAIN = "http://127.0.0.1:5001/wildflow-demo/us-central1";
+//const _BACKEND_DOMAIN = "http://127.0.0.1:5001/wildflow-demo/us-central1";
 const _BACKEND_DOMAIN = "https://us-central1-wildflow-demo.cloudfunctions.net";
 
 export const getAllTablesForProject = async () => {
@@ -25,6 +29,22 @@ export const getAllTablesForProject = async () => {
   });
 
   return await response.json();
+};
+
+export const runRCode = async (codeBase64: string) => {
+  return await fetch(`${_BACKEND_DOMAIN}/runRCode`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      token: token(),
+      projectId: projectId(),
+      rCode: btoa(codeBase64),
+    }),
+  }).then((response) => {
+    return response.json();
+  });
 };
 
 export const mergeTablesMinDistance = async (

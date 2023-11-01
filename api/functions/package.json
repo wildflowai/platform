@@ -17,9 +17,11 @@
     "@google-cloud/bigquery": "^6.2.1",
     "@types/dotenv": "^8.2.0",
     "@types/node": "^20.7.2",
+    "axios": "^1.5.1",
     "crypto": "^1.0.1",
     "firebase-admin": "^10.3.0",
     "firebase-functions": "^3.24.1",
+    "google-auth-library": "^9.1.0",
     "multer": "^1.4.5-lts.1",
     "postgres": "^3.3.5"
   },

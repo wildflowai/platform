@@ -11,6 +11,9 @@ import * as path from "path";
 import { generateSQLCode } from "./mergeTablesSqlGen";
 import * as crypto from "crypto";
 import * as stream from "stream";
+import axios from "axios";
+import { GoogleAuth } from "google-auth-library";
+import { readFileSync } from "fs";
 
 const multer = require("multer");
 const upload = multer({ storage: multer.memoryStorage() });
@@ -477,6 +480,71 @@ export const checkJobStatus = functions.https.onRequest(async (req, res) => {
       });
     } catch (err: any) {
       return res.status(500).send({ error: err.message });
+    }
+  });
+});
+
+export const runRCode = functions.https.onRequest(async (req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== "POST") {
+      return res.status(405).send({
+        error: "Invalid request method. Only POST requests are allowed.",
+      });
+    }
+
+    if (!checkRequestToken(req)) {
+      return res.status(401).send({
+        error: "Invalid token",
+      });
+    }
+
+    const rCode = req.body.rCode;
+
+    if (!rCode) {
+      return res.status(400).send({ error: "R code is required." });
+    }
+
+    try {
+      const serviceAccountKey = JSON.parse(
+        readFileSync(
+          MY_GOOGLE_APPLICATION_CREDENTIALS || "no file has been found",
+          "utf8"
+        )
+      );
+      // I checked it's correct!
+      //console.log("serviceAccountKey>>>>>>>>>>", serviceAccountKey);
+
+      // Create a Google Auth client with the service account key
+      const auth = new GoogleAuth({
+        credentials: serviceAccountKey,
+        //scopes: ["https://www.googleapis.com/auth/cloud-platform"],
+      });
+
+      // Obtain an ID token for the Cloud Run service
+      const client = await auth.getClient();
+      const idToken = await (client as any).fetchIdToken(
+        "https://wildflow-r-giuzxofzpa-uc.a.run.app"
+      );
+
+      // Make the request to the Cloud Run service
+      const rResponse = await axios.post(
+        "https://wildflow-r-giuzxofzpa-uc.a.run.app/run",
+        req.body.rCode,
+        {
+          headers: {
+            "Content-Type": "text/plain",
+            Authorization: `Bearer ${idToken}`,
+          },
+        }
+      );
+
+      return res.status(200).send(rResponse.data);
+    } catch (err: any) {
+      const encodedMessage = err.response.data.error[0] || "";
+      console.error(err, encodedMessage);
+      return res
+        .status(500)
+        .send({ error: err, encodedMessage: encodedMessage });
     }
   });
 });
