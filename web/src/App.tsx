@@ -11,7 +11,7 @@ import { ThemeContext } from "./ThemeContext";
 import { SelectedPageContext } from "./SelectedPageContext";
 import { OrganismProvider } from "./OrganismProvider";
 import { Routes, Route } from "react-router-dom";
-import JobResults from "./JobResults";
+import JobStatusPage from "./JobStatusPage";
 import { BrowserRouter } from "react-router-dom";
 import DataTableLink from "./DataTableLink";
 import TablesOverview from "./TablesOverview";
@@ -55,7 +55,7 @@ const App: React.FC = () => {
                 } transition-all duration-200 ease-in-out`}
               >
                 <Routes>
-                  <Route path="/job/:jobId" element={<JobResults />} />
+                  <Route path="/job/:jobId" element={<JobStatusPage />} />
                   <Route path="/jobs" element={<JobsOverview />} />
                   <Route path="/table/:tableName" element={<DataTableLink />} />
                   <Route path="/ingest/*" element={<Ingest />} />

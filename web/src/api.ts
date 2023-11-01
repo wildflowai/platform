@@ -31,6 +31,38 @@ export const getAllTablesForProject = async () => {
   return await response.json();
 };
 
+export const runBigQuerySqlCode = async (sqlCodeBase64: string) => {
+  return await fetch(`${_BACKEND_DOMAIN}/runBigQuerySQL`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      token: token(),
+      projectId: projectId(),
+      sqlCodeBase64: sqlCodeBase64,
+    }),
+  }).then((response) => {
+    return response.json();
+  });
+};
+
+export const bigQueryJobResults = async (jobId: string) => {
+  return await fetch(`${_BACKEND_DOMAIN}/getBigQueryJobResults`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      token: token(),
+      projectId: projectId(),
+      jobId: jobId,
+    }),
+  }).then((response) => {
+    return response.json();
+  });
+};
+
 export const runRCode = async (codeBase64: string) => {
   return await fetch(`${_BACKEND_DOMAIN}/runRCode`, {
     method: "POST",

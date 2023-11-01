@@ -106,6 +106,85 @@ export const downloadFile = functions.https.onRequest(async (req, res) => {
   });
 });
 
+export const runBigQuerySQL = functions.https.onRequest((req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== "POST") {
+      res.status(405).send({
+        error: "Invalid request method. Only POST requests are allowed.",
+      });
+      return;
+    }
+    if (!checkRequestToken(req)) {
+      res.status(401).send({
+        error: "Invalid token",
+      });
+      return;
+    }
+    const projectId = req.body.projectId;
+    const sqlCodeBase64 = req.body.sqlCodeBase64;
+    const code = sqlCodeBase64; //atob(sqlCodeBase64);
+    console.log(code);
+
+    const bqClient = getBigQueryClient(projectId);
+    try {
+      const [job] = await bqClient.createQueryJob({
+        query: code,
+        location: "US",
+      });
+      return res.status(200).send({
+        message: "Job started",
+        jobID: job.id,
+      });
+    } catch (err: any) {
+      return res
+        .status(500)
+        .send({ error: `Failed to start BigQuery job: ${err.message}` });
+    }
+  });
+});
+
+export const getBigQueryJobResults = functions.https.onRequest((req, res) => {
+  corsHandler(req, res, async () => {
+    if (req.method !== "POST") {
+      return res.status(405).send({
+        error: "Invalid request method. Only POST requests are allowed.",
+      });
+    }
+    const projectId = req.body.projectId;
+    const jobId = req.body.jobId;
+    const location = req.body.location || "US";
+
+    const bqClient = getBigQueryClient(projectId);
+    try {
+      const job = bqClient.job(jobId, { location: location });
+      const [metadata] = await job.getMetadata();
+
+      if (metadata.status.state === "RUNNING") {
+        return res.status(202).send({
+          message: "Job is still running",
+        });
+      }
+
+      if (metadata.status.state === "DONE" && metadata.status.errorResult) {
+        return res.status(500).send({
+          error: "BigQuery job failed",
+          errors: metadata.status.errors,
+        });
+      }
+
+      const [rows] = await job.getQueryResults();
+      return res.status(200).send({
+        message: "Job completed",
+        rows: rows,
+      });
+    } catch (err: any) {
+      return res.status(500).send({
+        error: `Failed to get results from BigQuery job: ${err.message}`,
+      });
+    }
+  });
+});
+
 export const mergeTablesMinDistance = functions.https.onRequest((req, res) => {
   corsHandler(req, res, async () => {
     if (req.method !== "POST") {
