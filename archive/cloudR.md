@@ -26,6 +26,10 @@ CMD ["Rscript", "-e", "pr <- plumber::plumb('/api.R'); pr$run(port=8080, host='0
 api.R
 
 ```R
+# library(plumber)
+# r <- plumb("api.R")
+# r$run(port = 8000)
+
 library(plumber)
 library(bigrquery)
 library(jsonlite)
@@ -73,23 +77,18 @@ function(req, res) {
   code_decoded <- rawToChar(openssl::base64_decode(code_raw))
 
   result <- tryCatch({
-    # Evaluate the R code
-    eval_result <- eval(parse(text = code_decoded))
+    # Evaluate the R code and capture the output
+    eval_result <- capture.output({
+      eval(parse(text = code_decoded))
+    })
 
-    # If result is a data frame, convert it to a JSON string and then to Base64
-    if (is.data.frame(eval_result)) {
-      result_json <- toJSON(eval_result)
-      result_base64 <- base64_encode(charToRaw(result_json))
-      return(result_base64)
-    }
+    # Convert the output to a single string
+    output_str <- paste(eval_result, collapse = "\n")
 
-    # If result is not a data frame, convert it to a character string
-    result_char <- as.character(eval_result)
+    # Encode the output as Base64
+    output_base64 <- base64_encode(charToRaw(output_str))
 
-    # Encode the result as Base64
-    result_base64 <- base64_encode(charToRaw(result_char))
-
-    return(result_base64)
+    return(output_base64)
 
   }, error = function(e) {
     res$status <- 500
@@ -99,6 +98,7 @@ function(req, res) {
 
   return(result)
 }
+
 ```
 
 ```R
@@ -222,4 +222,85 @@ gcloud run services add-iam-policy-binding wildflow-r \
  --member="group:wildflow-pelagioskakunja-access@googlegroups.com" \
  --role="roles/run.invoker" \
  --project=wildflow-demo
+```
+
+test.sh:
+
+```sh
+#!/bin/bash
+
+# Function to send a request to the local environment
+send_local_request() {
+  local base64_request=$1
+  response=$(curl -s -X POST -H "Content-Type: text/plain" --data-raw "$base64_request" http://127.0.0.1:8000/run)
+  echo "$response"
+}
+
+# Function to send a request to the production environment
+send_prod_request() {
+  local base64_request=$1
+  ID_TOKEN=$(gcloud auth print-identity-token)
+  response=$(curl -s -X POST -H "Content-Type: text/plain" -H "Authorization: Bearer ${ID_TOKEN}" --data-raw "$base64_request" https://wildflow-r-giuzxofzpa-uc.a.run.app/run)
+  echo "$response"
+}
+
+# Step 1: Check if request.R exists
+if [ ! -f "request.R" ]; then
+  echo "Error: request.R does not exist."
+  exit 1
+fi
+
+# Read request.R file and create a base64 string
+base64_request=$(base64 -w 0 request.R)
+if [ $? -ne 0 ]; then
+  echo "Error: Failed to encode request.R to base64."
+  exit 1
+fi
+
+# Check if base64_request is empty
+if [ -z "$base64_request" ]; then
+  echo "Error: base64 encoding resulted in an empty string."
+  exit 1
+fi
+
+# Step 2: Send POST request to R server
+if [ "$1" = "prod" ]; then
+  response=$(send_prod_request "$base64_request")
+else
+  response=$(send_local_request "$base64_request")
+fi
+
+if [ $? -ne 0 ]; then
+  echo "Error: Curl command failed."
+  exit 1
+fi
+
+# Check if response is empty
+if [ -z "$response" ]; then
+  echo "Error: Received an empty response from the server."
+  exit 1
+fi
+
+# Print raw response
+echo "Raw response from server:"
+echo "$response"
+echo ""
+
+# Step 3: Decode the base64 response
+# Check if the response is an error message
+if echo "$response" | jq .error > /dev/null 2>&1; then
+  # Extract and decode the error message
+  error_message=$(echo $response | jq -r '.error[0]' | base64 --decode)
+  echo "Error: $error_message"
+else
+  # Extract base64 string from JSON array and decode
+  decoded_response=$(echo $response | jq -r '.[0]' | base64 --decode)
+  if [ $? -ne 0 ]; then
+    echo "Error: Failed to decode response from base64."
+    exit 1
+  fi
+
+  echo "Decoded response:"
+  echo "$decoded_response"
+fi
 ```
