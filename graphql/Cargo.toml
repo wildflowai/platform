@@ -1,0 +1,10 @@
+[package]
+name = "wildflow-graphql-backend"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = "0.5"
+async-graphql = "4.0"
+async-graphql-axum = "4.0"
+tokio = { version = "1", features = ["full"] }
