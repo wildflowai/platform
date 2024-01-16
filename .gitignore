@@ -6,3 +6,4 @@ api/.DS_Store
 api/functions/.DS_Store
 .DS_Store
 graphql/target/
+graphql/bigquery-sa.json

@@ -4,7 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+gcp-bigquery-client = "0.18.0"
 axum = "0.5"
 async-graphql = "4.0"
 async-graphql-axum = "4.0"
 tokio = { version = "1", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+futures = "0.3"
+anyhow = "1.0"
