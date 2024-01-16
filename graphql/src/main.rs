@@ -5,11 +5,13 @@ mod models;
 use crate::graphql::{create_schema, MySchema};
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse};
 use axum::{routing::post, Extension, Router};
+use dotenv::dotenv;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
 #[tokio::main]
 async fn main() {
+    dotenv().ok();
     let schema = Arc::new(create_schema());
     let app = Router::new()
         .route("/graphql", post(graphql_handler))
