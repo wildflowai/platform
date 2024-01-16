@@ -1,4 +1,6 @@
+mod bigquery;
 mod graphql;
+mod models;
 
 use crate::graphql::{create_schema, MySchema};
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse};
