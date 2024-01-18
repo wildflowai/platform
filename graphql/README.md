@@ -16,3 +16,13 @@ Test:
 ```sh
 curl -X POST -H "Content-Type: application/json" -d '{"query":"query { tables { name columns { name } } }"}' https://wildflow-graphql-giuzxofzpa-ew.a.run.app/graphql
 ```
+
+Or:
+
+```graphql
+query {
+  bigquery {
+    executeBigqueryQuery(query: "SELECT * FROM raw.results LIMIT 2")
+  }
+}
+```
