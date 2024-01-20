@@ -1,4 +1,4 @@
-use crate::bigquery::execute_bigquery_query;
+use crate::bigquery::{execute_bigquery_query, table_names, table_rows};
 use crate::models::{Table, TableColumn};
 use async_graphql::{EmptyMutation, EmptySubscription, Object, Schema};
 use serde_json::Value;
@@ -9,24 +9,49 @@ pub struct BigQuery;
 #[Object]
 impl BigQuery {
     /// Fetches a list of tables available in the database.
-    async fn tables(&self) -> Vec<Table> {
-        vec![Table {
-            name: "Table1".to_string(),
-            columns: vec![
-                TableColumn {
-                    name: "Column1".to_string(),
-                },
-                TableColumn {
-                    name: "Column2".to_string(),
-                },
-            ],
-        }]
+    async fn tables(
+        &self,
+        project: String,
+        dataset: String,
+        limit: Option<u64>,
+    ) -> Result<Vec<Table>, anyhow::Error> {
+        Ok(table_names(&project, &dataset, limit)
+            .await?
+            .into_iter()
+            .map(|name| Table { name })
+            .collect())
     }
-
     /// Executes an arbitrary SQL query on Google BigQuery and returns the results as JSON.
     async fn execute_bigquery_query(&self, query: String) -> Result<Vec<Value>, anyhow::Error> {
         execute_bigquery_query(&query).await
     }
+}
+
+#[Object]
+impl Table {
+    async fn name(&self) -> &str {
+        &self.name
+    }
+
+    async fn columns(&self) -> Vec<TableColumn> {
+        fetch_columns_for_table(&self.name).await
+    }
+
+    async fn rows(&self, limit: Option<u64>) -> Result<Vec<Value>, anyhow::Error> {
+        table_rows(&"raw".to_string(), &self.name, limit).await
+    }
+}
+
+async fn fetch_columns_for_table(_table_name: &str) -> Vec<TableColumn> {
+    // Mock implementation. Replace with actual logic.
+    vec![
+        TableColumn {
+            name: "Column1".to_string(),
+        },
+        TableColumn {
+            name: "Column2".to_string(),
+        },
+    ]
 }
 
 /// Root for GraphQL queries.
