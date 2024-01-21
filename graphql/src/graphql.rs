@@ -1,5 +1,7 @@
-use crate::bigquery::{execute_bigquery_query, table_names, table_rows};
-use crate::models::{Table, TableColumn};
+use crate::bigquery::{
+    dataset_table_names, execute_bigquery_query, project_table_names, table_rows,
+};
+use crate::models::{Dataset, Table, TableColumn};
 use async_graphql::{EmptyMutation, EmptySubscription, Object, Schema};
 use serde_json::Value;
 
@@ -12,10 +14,9 @@ impl BigQuery {
     async fn tables(
         &self,
         project: String,
-        dataset: String,
         limit: Option<u64>,
     ) -> Result<Vec<Table>, anyhow::Error> {
-        Ok(table_names(&project, &dataset, limit)
+        Ok(project_table_names(&project, limit)
             .await?
             .into_iter()
             .map(|name| Table { name })
@@ -39,6 +40,24 @@ impl Table {
 
     async fn rows(&self, limit: Option<u64>) -> Result<Vec<Value>, anyhow::Error> {
         table_rows(&"raw".to_string(), &self.name, limit).await
+    }
+}
+
+#[Object]
+impl Dataset {
+    async fn name(&self) -> &str {
+        &self.name
+    }
+
+    async fn tables(&self) -> Vec<Table> {
+        vec![
+            Table {
+                name: "table 1".to_string(),
+            },
+            Table {
+                name: "table 2".to_string(),
+            },
+        ]
     }
 }
 

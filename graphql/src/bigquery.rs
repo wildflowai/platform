@@ -1,21 +1,63 @@
 use anyhow::{Ok, Result};
-use gcp_bigquery_client::{model::query_request::QueryRequest, table::ListOptions, Client};
+use futures::stream::{self, StreamExt};
+use gcp_bigquery_client::{
+    dataset::ListOptions as DatasetListOptions, model::query_request::QueryRequest,
+    table::ListOptions as TableListOptions, Client,
+};
 use serde_json::Value;
 use std::env;
 
+const DEFAULT_LIMIT: u64 = 5;
+
 pub async fn table_rows(dataset: &str, table: &str, limit: Option<u64>) -> Result<Vec<Value>> {
-    let lim = match limit {
-        Some(lim) => lim,
-        _ => 5,
-    };
     execute_bigquery_query(&format!(
         "SELECT * FROM {}.{} LIMIT {}",
-        dataset, table, lim
+        dataset,
+        table,
+        limit.unwrap_or(DEFAULT_LIMIT)
     ))
     .await
 }
 
-pub async fn table_names(project: &str, dataset: &str, limit: Option<u64>) -> Result<Vec<String>> {
+pub async fn project_table_names(project: &str, limit: Option<u64>) -> Result<Vec<String>> {
+    let sa_key_file = env::var("BIGQUERY_SA_KEY_FILE")?;
+    let client = Client::from_service_account_key_file(&sa_key_file).await?;
+
+    let datasets = client
+        .dataset()
+        .list(
+            project,
+            DatasetListOptions::default().max_results(limit.unwrap_or(DEFAULT_LIMIT)),
+        )
+        .await?
+        .datasets
+        .into_iter()
+        .map(|dataset| dataset.dataset_reference.dataset_id)
+        .collect::<Vec<_>>();
+
+    let tables_stream = stream::iter(datasets.into_iter().map(|dataset| {
+        let project_clone = project.to_string();
+        async move { dataset_table_names(&project_clone, &dataset, limit).await }
+    }));
+
+    let tables = tables_stream
+        .buffer_unordered(10)
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?
+        .into_iter()
+        .flatten()
+        .collect::<Vec<String>>();
+
+    Ok(tables)
+}
+
+pub async fn dataset_table_names(
+    project: &str,
+    dataset: &str,
+    limit: Option<u64>,
+) -> Result<Vec<String>> {
     let sa_key_file = env::var("BIGQUERY_SA_KEY_FILE")?;
     let client = Client::from_service_account_key_file(&sa_key_file).await?;
 
@@ -24,10 +66,7 @@ pub async fn table_names(project: &str, dataset: &str, limit: Option<u64>) -> Re
         .list(
             project,
             dataset,
-            match limit {
-                Some(lim) => ListOptions::default().max_results(lim),
-                _ => ListOptions::default().max_results(20),
-            },
+            TableListOptions::default().max_results(limit.unwrap_or(DEFAULT_LIMIT)),
         )
         .await?;
 
