@@ -26,7 +26,7 @@
 <p align="center">
   <a href="https://github.com/wildflowai/platform/stargazers/"><img src="https://img.shields.io/github/stars/wildflowai/platform?style=social&label=Star&maxAge=2592000" /></a>
   <a href="https://github.com/wildflowai/platform/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License - MIT"></a>
-  <a href="https://discord.electric-sql.com"><img src="https://img.shields.io/discord/1200085628189147176?color=5969EA&label=discord" alt="Chat - Discord"></a>
+  <a href="https://discord.gg/j7BBsHUJSC"><img src="https://img.shields.io/discord/1200085628189147176?color=5969EA&label=discord" alt="Chat - Discord"></a>
 </p>
 
 **Note:** wildflow is in early development.
