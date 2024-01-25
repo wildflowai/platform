@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <strong>Open marine biodiversity data platform aiming to protect oceans by accelerating research and conservation.</strong>
+  Open marine biodiversity data platform aiming to protect oceans by accelerating research and conservation.
 <p>
 
 <p align="center">
@@ -29,11 +29,9 @@
   <a href="https://discord.electric-sql.com"><img src="https://img.shields.io/discord/1200085628189147176?color=5969EA&label=discord" alt="Chat - Discord"></a>
 </p>
 
-<p align="center">
-<strong>Note:</strong> wildflow is in early development.
-<p>
+**Note:** wildflow is in early development.
 
-## Empower biodiversity researchers with modern AI infrastructure!
+### Empower biodiversity researchers with modern AI infrastructure!
 
 In today's landscape, biodiversity researchers must not only excel in understanding nature and addressing the biodiversity crisis, but they also need to master big data management. This includes building data pipelines, aggregating data from various sources, cleaning data, handling extensive big data operations and deploying novel models for multi-model data formats.
 
