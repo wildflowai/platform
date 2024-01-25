@@ -7,7 +7,7 @@
       <source media="(prefers-color-scheme: light)"
           srcset="https://raw.githubusercontent.com/wildflowai/.github/main/profile/wildflow-logo-dark.svg"
       />
-      <img alt="wildflow logo" style="width: 70%;"
+      <img alt="wildflow logo" width="60%"
           src="https://raw.githubusercontent.com/wildflowai/.github/main/profile/wildflow-logo-dark.svg"
       />
     </picture>
