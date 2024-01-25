@@ -1,8 +1,23 @@
-# [wildflow](https://wildflow.ai) 🌎 🐳
+<p align="center">
+  <a href="https://wildflow.ai" target="_blank">
+    <picture>
+      <source media="(prefers-color-scheme: dark)"
+          srcset="https://raw.githubusercontent.com/wildflowai/.github/main/profile/wildflow-logo-dark.svg"
+      />
+      <source media="(prefers-color-scheme: light)"
+          srcset="https://raw.githubusercontent.com/wildflowai/.github/main/profile/wildflow-logo-dark.svg"
+      />
+      <img alt="wildflow logo"
+          src="https://raw.githubusercontent.com/wildflowai/.github/main/profile/wildflow-logo-dark.svg"
+      />
+    </picture>
+  </a>
+</p>
 
 <p align="center">
   Open marine biodiversity data platform aiming to protect oceans by accelerating research and conservation.
 <p>
+
 <p align="center">
   <em>"Digital nervous system of the planet"</em><br/>
   <em>"HuggingFace for biodiversity" (one Cloud for biodversity)</em>
