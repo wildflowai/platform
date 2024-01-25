@@ -1,13 +1,11 @@
 # [wildflow](https://wildflow.ai) 🌎 🐳
 
 <p align="center">
-  [wildflow](https://wildflow.ai) is an open marine biodiversity data platform aiming to protect oceans by accelerating research and conservation.
+  <strong><a href="https://wildflow.ai"> wildflow</a></strong> is an open marine biodiversity data platform aiming to protect oceans by accelerating research and conservation.
 <p>
 <p align="center">
-  **"Digital nervous system for the planet"**
-<p>
-<p align="center">
-  **"HuggingFace for biodiversity" (one Cloud for biodversity)**
+  <em>"Digital nervous system of the planet"</em><br/>
+  <em>"HuggingFace for biodiversity" (one Cloud for biodversity)</em>
 <p>
 
 <p align="center">
@@ -24,7 +22,7 @@ In today's landscape, biodiversity researchers must not only excel in understand
 
 ## What is [wildflow](https://wildflow.ai)?
 
-We offer an open platform that specializes in multi-modal biodiversity data (eDNA, bioacoustics, computer vision, geospatial, manual observations / other ways of measuring biosphere) and uses AI to e.g. forecast coral bleaching events, predict harmful algae blooms, create marine protected areas, assess the impact of offshore wind farms, run biodiversity assessments for corporates and more.
+It's an open platform that specializes in multi-modal biodiversity data (eDNA, bioacoustics, computer vision, geospatial, manual observations / other ways of measuring biosphere) and uses AI to e.g. forecast coral bleaching events, predict harmful algae blooms, create marine protected areas, assess the impact of offshore wind farms, run biodiversity assessments for corporates and more.
 
 ![wildflow](https://raw.githubusercontent.com/wildflowai/docs/main/src/assets/wildflow.svg)
 
