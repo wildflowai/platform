@@ -1,3 +1,13 @@
+## GraphQL API
+
+Our main microservice powering https://api.wildflow.ai/graphql (will be available soon). It talks to underlying resources like Google BigQuery, GCS buckets, Dataflow pipelines and Postgres (metadata).
+
+It's in early development and being migrated from our [Firebase Functions API](/api/).
+
+## Usage
+
+For now it's running as a container on CloudRun.
+
 Build:
 
 ```sh
