@@ -1,7 +1,7 @@
 # [wildflow](https://wildflow.ai) 🌎 🐳
 
 <p align="center">
-  <strong><a href="https://wildflow.ai"> wildflow</a></strong> is an open marine biodiversity data platform aiming to protect oceans by accelerating research and conservation.
+  Open marine biodiversity data platform aiming to protect oceans by accelerating research and conservation.
 <p>
 <p align="center">
   <em>"Digital nervous system of the planet"</em><br/>
