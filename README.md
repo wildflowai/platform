@@ -52,7 +52,7 @@ Our **current focus** on **time series geospatial biodiversity data** (observati
 
 - [Website](https://wildflow.ai)
 - [Overview](https://docs.wildflow.ai/overview)
-- [Discord](https://discord.gg/j7BBsHUJSC)
+- [Discord](https://discord.wildflow.ai)
 
 ## How do I use it?
 
@@ -60,7 +60,7 @@ It's in early development. We have a prototype where you can upload e.g. your CS
 
 ## Contributing & Support
 
-We have an [open community Discord](https://discord.gg/j7BBsHUJSC) and [WhatsApp](https://chat.whatsapp.com/FC19T0CAcq0JUGJRCsxAyM). Come and say hello and let us know if you have any questions or need any help getting things running.
+We have an [open community Discord](https://discord.wildflow.ai) and [WhatsApp](https://whatsapp.wildflow.ai). Come and say hello and let us know if you have any questions or need any help getting things running.
 
 We welcome contributions to this mission of ocean conservation. Join us! 🤗
 
