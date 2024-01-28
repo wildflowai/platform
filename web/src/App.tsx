@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Explorer from "./Explorer";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import Files from "./Files";
 import Datasets from "./Datasets";
+import Auth from "./Auth";
 import MergeTables from "./MergeTables";
 import Workflows from "./Workflows";
 import Query from "./Query";
@@ -20,7 +22,7 @@ import Ingest from "./Ingest";
 import JobsOverview from "./JobsOverview";
 
 const App: React.FC = () => {
-  const [selectedPageName, setSelectedPageName] = useState<string>("Explorer");
+  const [selectedPageName, setSelectedPageName] = useState<string>("Auth");
   const [darkMode, setDarkMode] = useState<boolean>(true);
 
   const toggleDarkMode = () => {
@@ -43,39 +45,47 @@ const App: React.FC = () => {
   return (
     <BrowserRouter>
       <ThemeContext.Provider value={{ darkMode, toggleDarkMode }}>
-        <SelectedPageContext.Provider
-          value={{ selectedPageName, setSelectedPageName }}
-        >
-          <OrganismProvider>
-            <div className="flex">
-              <Sidebar />
-              <div
-                className={`flex flex-grow flex-shrink ${
-                  darkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"
-                } transition-all duration-200 ease-in-out`}
-              >
-                <Routes>
-                  <Route path="/job/:jobId" element={<JobStatusPage />} />
-                  <Route path="/jobs" element={<JobsOverview />} />
-                  <Route path="/table/:tableName" element={<DataTableLink />} />
-                  <Route path="/ingest/*" element={<Ingest />} />
-                  <Route path="/mergetables" element={<MergeTables />} />
-                  <Route path="/explorer" element={<Explorer />} />
-                  <Route path="/" element={<Explorer />} />
-                  <Route path="/files" element={<Files />} />
-                  <Route path="/datasets" element={<TablesOverview />} />
-                  <Route path="/upload" element={<Upload />} />
-                  {/* <Route path="/datasets" element={<Datasets />} /> */}
-                  <Route path="/workflows" element={<MergeTables />} />
-                  <Route path="/query" element={<Query />} />
-                  <Route path="/settings" element={<Settings />} />
-                  {/* You can add a default fallback route if needed */}
-                  <Route path="*" element={<WrongUrl />} />
-                </Routes>
+        <GoogleOAuthProvider clientId="30246104341-2gt4q839sbet97i1gf1qiscehblsefth.apps.googleusercontent.com">
+          <SelectedPageContext.Provider
+            value={{ selectedPageName, setSelectedPageName }}
+          >
+            <OrganismProvider>
+              <div className="flex">
+                <Sidebar />
+                <div
+                  className={`flex flex-grow flex-shrink ${
+                    darkMode
+                      ? "bg-gray-700 text-white"
+                      : "bg-gray-100 text-black"
+                  } transition-all duration-200 ease-in-out`}
+                >
+                  <Routes>
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/job/:jobId" element={<JobStatusPage />} />
+                    <Route path="/jobs" element={<JobsOverview />} />
+                    <Route
+                      path="/table/:tableName"
+                      element={<DataTableLink />}
+                    />
+                    <Route path="/ingest/*" element={<Ingest />} />
+                    <Route path="/mergetables" element={<MergeTables />} />
+                    <Route path="/explorer" element={<Explorer />} />
+                    <Route path="/" element={<Explorer />} />
+                    <Route path="/files" element={<Files />} />
+                    <Route path="/datasets" element={<TablesOverview />} />
+                    <Route path="/upload" element={<Upload />} />
+                    {/* <Route path="/datasets" element={<Datasets />} /> */}
+                    <Route path="/workflows" element={<MergeTables />} />
+                    <Route path="/query" element={<Query />} />
+                    <Route path="/settings" element={<Settings />} />
+                    {/* You can add a default fallback route if needed */}
+                    <Route path="*" element={<WrongUrl />} />
+                  </Routes>
+                </div>
               </div>
-            </div>
-          </OrganismProvider>
-        </SelectedPageContext.Provider>
+            </OrganismProvider>
+          </SelectedPageContext.Provider>
+        </GoogleOAuthProvider>
       </ThemeContext.Provider>
     </BrowserRouter>
   );
