@@ -4,6 +4,7 @@ mod models;
 
 use crate::graphql::{create_schema, MySchema};
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse};
+use axum::http::header::HeaderMap;
 use axum::response::{Html, IntoResponse};
 use axum::routing::{get, post};
 use axum::{Extension, Router};
@@ -34,8 +35,14 @@ async fn main() {
         .unwrap();
 }
 
-async fn graphql_handler(schema: Extension<Arc<MySchema>>, req: GraphQLRequest) -> GraphQLResponse {
-    schema.execute(req.into_inner()).await.into()
+async fn graphql_handler(
+    schema: Extension<Arc<MySchema>>,
+    headers: HeaderMap,
+    req: GraphQLRequest,
+) -> GraphQLResponse {
+    let mut req = req.into_inner();
+    req.data.insert(headers);
+    schema.execute(req).await.into()
 }
 
 async fn graphiql_query_explorer_handler() -> impl IntoResponse {

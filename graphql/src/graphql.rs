@@ -1,8 +1,10 @@
 use crate::bigquery::{
-    dataset_table_names, execute_bigquery_query, project_table_names, table_rows,
+    execute_bigquery_query, execute_bigquery_query_bearer, project_table_names, table_rows,
 };
 use crate::models::{Dataset, Table, TableColumn};
-use async_graphql::{EmptyMutation, EmptySubscription, Object, Schema};
+use async_graphql::{Context, EmptyMutation, EmptySubscription, Object, Schema};
+use http::header::HeaderMap;
+
 use serde_json::Value;
 
 /// Namespace for BigQuery related queries.
@@ -25,6 +27,32 @@ impl BigQuery {
     /// Executes an arbitrary SQL query on Google BigQuery and returns the results as JSON.
     async fn execute_bigquery_query(&self, query: String) -> Result<Vec<Value>, anyhow::Error> {
         execute_bigquery_query(&query).await
+    }
+    async fn execute_bigquery_query_bearer(
+        &self,
+        ctx: &Context<'_>,
+        project: String,
+        query: String,
+    ) -> Result<Vec<Value>, anyhow::Error> {
+        // Get the headers from the context
+        let headers = ctx
+            .data_opt::<HeaderMap>()
+            .ok_or_else(|| anyhow::anyhow!("No headers found in the context"))?;
+
+        // Extract the Bearer token
+        let auth_header_value = headers
+            .get(http::header::AUTHORIZATION)
+            .ok_or_else(|| anyhow::anyhow!("Authorization header is missing"))?;
+
+        let auth_header_str = auth_header_value
+            .to_str()
+            .map_err(|_| anyhow::anyhow!("Failed to convert the header value to a string"))?;
+
+        let token = auth_header_str
+            .strip_prefix("Bearer ")
+            .ok_or_else(|| anyhow::anyhow!("Invalid authorization header format"))?;
+
+        execute_bigquery_query_bearer(&token, &project, &query).await
     }
 }
 

@@ -2455,6 +2455,7 @@ dependencies = [
  "dotenv",
  "futures",
  "gcp-bigquery-client",
+ "http",
  "jsonwebtoken",
  "openssl",
  "reqwest",
