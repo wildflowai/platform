@@ -32,7 +32,18 @@ Or:
 ```graphql
 query {
   bigquery {
-    executeBigqueryQuery(query: "SELECT * FROM raw.results LIMIT 2")
+    executeBigqueryQueryBearer(
+      project: "wildflow-pelagic"
+      query: "SELECT * FROM raw.results LIMIT 2"
+    )
   }
+}
+```
+
+headers:
+
+```
+{
+  "Authorization": "Bearer [token]"
 }
 ```
