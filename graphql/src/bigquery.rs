@@ -234,6 +234,7 @@ mod tests {
             &token(),
             &project(),
             Some("and t.table_name = 'test_table_info_table'"),
+            None,
         )
         .await
         .expect("Query failed");
