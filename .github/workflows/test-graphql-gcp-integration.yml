@@ -32,9 +32,9 @@ jobs:
           GCP_ACCESS_TOKEN=$(gcloud auth application-default print-access-token)
           echo "GCP_ACCESS_TOKEN=${GCP_ACCESS_TOKEN}" >> $GITHUB_ENV
 
-      # Running tests:
       - name: Run Tests
         run: |
+          cd graphql
           cargo test
         env:
           GCP_ACCESS_TOKEN: ${{ env.GCP_ACCESS_TOKEN }}
