@@ -31,3 +31,5 @@ openssl = { version = "0.10.57", features = ["vendored"] }
 shaku = { version = "0.6.1", features = ["thread_safe"] }
 shaku_axum = "0.4.0"
 http = "0.2"
+log = "0.4"
+env_logger = "0.9"

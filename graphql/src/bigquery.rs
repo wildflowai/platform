@@ -4,6 +4,7 @@ use gcp_bigquery_client::{
     dataset::ListOptions as DatasetListOptions, model::query_request::QueryRequest,
     table::ListOptions as TableListOptions, Client,
 };
+use log::info;
 use reqwest;
 use serde_json::{json, Map, Value};
 use std::env;
@@ -120,6 +121,7 @@ pub async fn execute_bigquery_query_bearer(
     project_id: &str,
     query: &str,
 ) -> Result<Vec<Value>, Error> {
+    info!("Starting query execution...");
     let client = reqwest::Client::new();
 
     let response = client
@@ -182,4 +184,37 @@ fn parse_bigquery_response(json_response: serde_json::Value) -> Result<Vec<Value
         .collect::<Vec<Value>>();
 
     Ok(results)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+    use tokio;
+
+    #[tokio::test]
+    async fn test_bigquery_run_query_with_bearer_auth_success() {
+        let _ = env_logger::try_init();
+        let token = std::env::var("GCP_ACCESS_TOKEN").expect("GCP_ACCESS_TOKEN not set");
+        let expected = vec![
+            json!({"numbers": [{"v": "123"}], "letters": [{"v": "abc"}]}),
+            json!({"numbers": [{"v": "456"}], "letters": [{"v": "def"}]}),
+        ];
+
+        let tested = execute_bigquery_query_bearer(
+            &token,
+            &std::env::var("WILDFLOW_BIGQUERY_TEST_PROJECT")
+                .unwrap()
+                .as_str(),
+            "
+            select 123 as numbers, 'abc' as letters
+            union all
+            select 456, 'def'
+            ",
+        )
+        .await
+        .expect("Query failed");
+
+        assert_eq!(tested, expected);
+    }
 }

@@ -1,0 +1,41 @@
+name: Test GraphQL GCP Integration
+
+on:
+  push:
+    paths:
+      - "graphql/**"
+      - ".github/workflows/**"
+  pull_request:
+    paths:
+      - "graphql/**"
+      - ".github/workflows/**"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up GCP SDK
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          project_id: ${{ secrets.WILDFLOW_BIGQUERY_TEST_PROJECT }}
+          service_account_key: ${{ secrets.WILDFLOW_BIGQUERY_TEST_SA }}
+          export_default_credentials: true
+
+      - name: Get GCP Access Bearer Token
+        run: |
+        echo "Getting GCP Access Token..."
+        GCP_ACCESS_TOKEN=$(gcloud auth application-default print-access-token)
+        echo "GCP_ACCESS_TOKEN=${GCP_ACCESS_TOKEN}" >> $GITHUB_ENV
+
+      # Add additional steps for your testing or deployment here
+      # For example, running tests:
+      - name: Run Tests
+        run: |
+          cargo test
+        env:
+          GCP_ACCESS_TOKEN: ${{ env.GCP_ACCESS_TOKEN }}
+          WILDFLOW_BIGQUERY_TEST_PROJECT: ${{ vars.WILDFLOW_BIGQUERY_TEST_PROJECT }}
