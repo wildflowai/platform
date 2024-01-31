@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set up GCP SDK
-        uses: google-github-actions/setup-gcloud@master
+        uses: google-github-actions/setup-gcloud@main
         with:
           project_id: ${{ secrets.WILDFLOW_BIGQUERY_TEST_PROJECT }}
           service_account_key: ${{ secrets.WILDFLOW_BIGQUERY_TEST_SA }}
