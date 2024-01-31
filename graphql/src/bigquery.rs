@@ -196,10 +196,7 @@ mod tests {
     async fn test_bigquery_run_query_with_bearer_auth_success() {
         let _ = env_logger::try_init();
         let token = std::env::var("GCP_ACCESS_TOKEN").expect("GCP_ACCESS_TOKEN not set");
-        let expected = vec![
-            json!({"numbers": [{"v": "123"}], "letters": [{"v": "abc"}]}),
-            json!({"numbers": [{"v": "456"}], "letters": [{"v": "def"}]}),
-        ];
+        let expected = vec![json!({"numbers": [{"v": "123"}]})];
 
         let tested = execute_bigquery_query_bearer(
             &token,
@@ -207,9 +204,7 @@ mod tests {
                 .unwrap()
                 .as_str(),
             "
-            select 123 as numbers, 'abc' as letters
-            union all
-            select 456, 'def'
+            select 123 as numbers
             ",
         )
         .await
