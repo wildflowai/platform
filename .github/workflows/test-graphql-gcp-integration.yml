@@ -18,12 +18,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up GCP SDK
-        uses: google-github-actions/setup-gcloud@main
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
         with:
-          project_id: ${{ secrets.WILDFLOW_BIGQUERY_TEST_PROJECT }}
-          service_account_key: ${{ secrets.WILDFLOW_BIGQUERY_TEST_SA }}
-          export_default_credentials: true
+          credentials_json: ${{ secrets.WILDFLOW_BIGQUERY_TEST_SA }}
+
+      - name: Set up GCP SDK
+        uses: google-github-actions/setup-gcloud@v2
 
       - name: Get GCP Access Bearer Token
         run: |
@@ -31,6 +32,7 @@ jobs:
           GCP_ACCESS_TOKEN=$(gcloud auth application-default print-access-token)
           echo "GCP_ACCESS_TOKEN=${GCP_ACCESS_TOKEN}" >> $GITHUB_ENV
 
+      # Running tests:
       - name: Run Tests
         run: |
           cargo test
