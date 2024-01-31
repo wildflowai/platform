@@ -6,15 +6,3 @@ pub struct TableColumn {
     /// The name of the column.
     pub name: String,
 }
-
-/// Represents a database table with multiple columns.
-pub struct Table {
-    /// The name of the table.
-    pub name: String,
-}
-
-/// Represents a dataset with multiple tables.
-pub struct Dataset {
-    /// The name of the table.
-    pub name: String,
-}

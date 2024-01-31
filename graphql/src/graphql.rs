@@ -1,7 +1,5 @@
-use crate::bigquery::{
-    execute_bigquery_query, execute_bigquery_query_bearer, project_table_names, table_rows,
-};
-use crate::models::{Dataset, Table, TableColumn};
+use crate::bigquery::{execute_bigquery_query_bearer, table_rows, tables_info, TableInfo};
+use crate::models::TableColumn;
 use async_graphql::{Context, EmptyMutation, EmptySubscription, Object, Schema};
 use http::header::HeaderMap;
 
@@ -15,77 +13,90 @@ impl BigQuery {
     /// Fetches a list of tables available in the database.
     async fn tables(
         &self,
+        ctx: &Context<'_>,
         project: String,
         limit: Option<u64>,
-    ) -> Result<Vec<Table>, anyhow::Error> {
-        Ok(project_table_names(&project, limit)
+    ) -> Result<Vec<TableInfo>, anyhow::Error> {
+        let token = self
+            .ctx_auth_token(ctx)
             .await?
-            .into_iter()
-            .map(|name| Table { name })
-            .collect())
+            .ok_or_else(|| anyhow::anyhow!("Authentication token is missing"))?;
+
+        Ok(tables_info(&token, &project, Some(""), limit).await?)
     }
-    /// Executes an arbitrary SQL query on Google BigQuery and returns the results as JSON.
-    async fn execute_bigquery_query(&self, query: String) -> Result<Vec<Value>, anyhow::Error> {
-        execute_bigquery_query(&query).await
+
+    async fn ctx_auth_token(&self, ctx: &Context<'_>) -> Result<Option<String>, anyhow::Error> {
+        let headers = ctx
+            .data_opt::<HeaderMap>()
+            .ok_or_else(|| anyhow::anyhow!("No headers found in the context"))?;
+
+        let auth_header_value = match headers.get(http::header::AUTHORIZATION) {
+            Some(value) => value,
+            None => return Ok(None),
+        };
+
+        let auth_header_str = auth_header_value
+            .to_str()
+            .map_err(|_| anyhow::anyhow!("Failed to convert the header value to a string"))?;
+
+        Ok(auth_header_str
+            .strip_prefix("Bearer ")
+            .map(|s| s.trim().to_string()))
     }
+
     async fn execute_bigquery_query_bearer(
         &self,
         ctx: &Context<'_>,
         project: String,
         query: String,
     ) -> Result<Vec<Value>, anyhow::Error> {
-        // Get the headers from the context
-        let headers = ctx
-            .data_opt::<HeaderMap>()
-            .ok_or_else(|| anyhow::anyhow!("No headers found in the context"))?;
-
-        // Extract the Bearer token
-        let auth_header_value = headers
-            .get(http::header::AUTHORIZATION)
-            .ok_or_else(|| anyhow::anyhow!("Authorization header is missing"))?;
-
-        let auth_header_str = auth_header_value
-            .to_str()
-            .map_err(|_| anyhow::anyhow!("Failed to convert the header value to a string"))?;
-
-        let token = auth_header_str
-            .strip_prefix("Bearer ")
-            .ok_or_else(|| anyhow::anyhow!("Invalid authorization header format"))?;
-
+        let token = self
+            .ctx_auth_token(ctx)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Authentication token is missing"))?;
         execute_bigquery_query_bearer(&token, &project, &query).await
     }
 }
 
 #[Object]
-impl Table {
+impl TableInfo {
     async fn name(&self) -> &str {
-        &self.name
+        &self.table_name
     }
 
     async fn columns(&self) -> Vec<TableColumn> {
-        fetch_columns_for_table(&self.name).await
+        fetch_columns_for_table(&self.table_name).await
     }
 
-    async fn rows(&self, limit: Option<u64>) -> Result<Vec<Value>, anyhow::Error> {
-        table_rows(&"raw".to_string(), &self.name, limit).await
+    async fn rows(
+        &self,
+        ctx: &Context<'_>,
+        limit: Option<u64>,
+    ) -> Result<Vec<Value>, anyhow::Error> {
+        let token = self
+            .ctx_auth_token(ctx)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Authentication token is missing"))?;
+        table_rows(&token, "wildflow-pelagic", "raw", &self.table_name, limit).await
     }
-}
 
-#[Object]
-impl Dataset {
-    async fn name(&self) -> &str {
-        &self.name
-    }
+    async fn ctx_auth_token(&self, ctx: &Context<'_>) -> Result<Option<String>, anyhow::Error> {
+        let headers = ctx
+            .data_opt::<HeaderMap>()
+            .ok_or_else(|| anyhow::anyhow!("No headers found in the context"))?;
 
-    async fn tables(&self) -> Vec<Table> {
-        vec![
-            Table {
-                name: "table 1".to_string(),
-            },
-            Table {
-                name: "table 2".to_string(),
-            },
-        ]
+        let auth_header_value = match headers.get(http::header::AUTHORIZATION) {
+            Some(value) => value,
+            None => return Ok(None),
+        };
+
+        let auth_header_str = auth_header_value
+            .to_str()
+            .map_err(|_| anyhow::anyhow!("Failed to convert the header value to a string"))?;
+
+        Ok(auth_header_str
+            .strip_prefix("Bearer ")
+            .map(|s| s.trim().to_string()))
     }
 }
 
