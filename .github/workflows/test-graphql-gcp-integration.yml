@@ -27,12 +27,10 @@ jobs:
 
       - name: Get GCP Access Bearer Token
         run: |
-        echo "Getting GCP Access Token..."
-        GCP_ACCESS_TOKEN=$(gcloud auth application-default print-access-token)
-        echo "GCP_ACCESS_TOKEN=${GCP_ACCESS_TOKEN}" >> $GITHUB_ENV
+          echo "Getting GCP Access Token..."
+          GCP_ACCESS_TOKEN=$(gcloud auth application-default print-access-token)
+          echo "GCP_ACCESS_TOKEN=${GCP_ACCESS_TOKEN}" >> $GITHUB_ENV
 
-      # Add additional steps for your testing or deployment here
-      # For example, running tests:
       - name: Run Tests
         run: |
           cargo test
