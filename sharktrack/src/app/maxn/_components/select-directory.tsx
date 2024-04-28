@@ -11,11 +11,15 @@ export default function SelectDirectory() {
 
   const handleDirectorySelection = async () => {
     try {
+      /* eslint-disable */
       const dirHandle = await (window as any).showDirectoryPicker();
       const { detections, csvFile } = await findRequiredFiles(dirHandle);
       const labeledDetections = await parseDetections(detections);
       const sharktrackData = await parseCsv(csvFile);
-      const maxNData = computeMaxN(sharktrackData, labeledDetections);
+      const maxNData = computeMaxN(
+        sharktrackData as any as any[],
+        labeledDetections,
+      );
       const csvContent = convertToCSV(maxNData);
       downloadCSV(csvContent, "maxn.csv");
       setResults("Detections and CSV data processed and downloaded.");
