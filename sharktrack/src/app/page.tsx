@@ -38,13 +38,41 @@ async function Landing() {
   );
 }
 
+type Payment = {
+  id: string;
+  amount: number;
+  status: "pending" | "processing" | "success" | "failed";
+  email: string;
+};
+
+export const payments: Payment[] = [
+  {
+    id: "728ed52f",
+    amount: 100,
+    status: "pending",
+    email: "m@example.com",
+  },
+  {
+    id: "489e1d42",
+    amount: 125,
+    status: "processing",
+    email: "example@gmail.com",
+  },
+];
+
+async function Table() {
+  return <div>Hello</div>;
+}
+
 export default async function HomePage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
       <SignedOut>
         <Landing />
       </SignedOut>
-      <SignedIn>You are signed in</SignedIn>
+      <SignedIn>
+        <Table />
+      </SignedIn>
     </main>
   );
 }
