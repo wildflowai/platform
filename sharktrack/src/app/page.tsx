@@ -20,9 +20,20 @@ async function Landing() {
           github.com/filippovarini/sharktrack
         </a>
       </div>
-      <Button>
-        <SignInButton>Get started</SignInButton>
-      </Button>
+      <div className="space-x-2">
+        <Button>
+          <SignInButton>Get started</SignInButton>
+        </Button>
+        <Button variant="outline">
+          <a
+            href="https://wildflow.mintlify.app/tutorials/sharktrack"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Learn More
+          </a>
+        </Button>
+      </div>
     </div>
   );
 }

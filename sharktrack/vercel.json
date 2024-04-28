@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/docs",
+      "destination": "https://wildflow.mintlify.app/tutorials/sharktrack",
+      "permanent": true
+    }
+  ]
+}
