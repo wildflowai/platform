@@ -1,3 +1,5 @@
+import SelectDirectory from "./_components/select-directory";
+
 export default function MaxNPage() {
-  return <div>MaxN Page</div>;
+  return <SelectDirectory />;
 }

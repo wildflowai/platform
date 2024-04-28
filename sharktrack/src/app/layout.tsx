@@ -2,6 +2,7 @@ import "~/styles/globals.css";
 import { ClerkProvider, SignedOut } from "@clerk/nextjs";
 import { TopNav } from "./_components/topnav";
 import { SignedIn } from "@clerk/nextjs";
+import { Toaster } from "~/components/ui/sonner";
 
 import { Inter } from "next/font/google";
 
@@ -29,6 +30,7 @@ export default function RootLayout({
             <TopNav />
           </SignedIn>
           {children}
+          <Toaster />
         </body>
       </html>
     </ClerkProvider>
