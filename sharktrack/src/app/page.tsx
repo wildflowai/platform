@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getUsers } from "~/server/queries";
 import { Button } from "~/components/ui/button";
 import { SignIn, SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { Suspense } from "react";
 
 async function Landing() {
   return (
@@ -32,7 +33,7 @@ export default async function HomePage() {
       <SignedOut>
         <Landing />
       </SignedOut>
-      <SignedIn>You're signed in</SignedIn>
+      <SignedIn>You are signed in</SignedIn>
     </main>
   );
 }

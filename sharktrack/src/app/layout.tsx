@@ -1,6 +1,7 @@
 import "~/styles/globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
+import { ClerkProvider, SignedOut } from "@clerk/nextjs";
 import { TopNav } from "./_components/topnav";
+import { SignedIn } from "@clerk/nextjs";
 
 import { Inter } from "next/font/google";
 
@@ -24,7 +25,9 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={`font-sans ${inter.variable} dark`}>
-          <TopNav />
+          <SignedIn>
+            <TopNav />
+          </SignedIn>
           {children}
         </body>
       </html>
