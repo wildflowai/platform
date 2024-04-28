@@ -1,8 +1,6 @@
-import Link from "next/link";
-import { getUsers } from "~/server/queries";
 import { Button } from "~/components/ui/button";
 import { SignIn, SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
-import { Suspense } from "react";
+import Link from "next/link";
 
 async function Landing() {
   return (
@@ -21,8 +19,11 @@ async function Landing() {
         </a>
       </div>
       <div className="space-x-2">
-        <Button>
-          <SignInButton>Get started</SignInButton>
+        <Link href="/maxn">
+          <Button>Calculate MaxN</Button>
+        </Link>
+        <Button variant="outline">
+          <SignInButton />
         </Button>
         <Button variant="outline">
           <a
