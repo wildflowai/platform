@@ -28,6 +28,16 @@ def create_parquet(filename):
 
     print('here 3')
 
-# Main execution
 if __name__ == "__main__":
     create_parquet('copernicus_zooplankton.nc')
+
+# Run this thing to update time in BigQuery
+#
+# create or replace table `wildflow-pelagic.env.zooplankton` as (
+#   select
+#     timestamp_micros(cast(time / 1000 as integer)) as time,
+#     latitude,
+#     longitude,
+#     zooc
+#   from `wildflow-pelagic.env.zooplankton`
+# )
