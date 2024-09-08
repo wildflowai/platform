@@ -32,6 +32,13 @@
 
 **Note:** wildflow is in early development.
 
+<p align="center">
+  <video width="60%" controls>
+    <source src="https://wildflow.ai/wildflowcoral.webm" type="video/webm">
+    Your browser does not support the video tag.
+  </video>
+</p>
+
 ### Empower biodiversity researchers with modern AI infrastructure!
 
 In today's landscape, biodiversity researchers must not only excel in understanding nature and addressing the biodiversity crisis, but they also need to master big data management. This includes building data pipelines, aggregating data from various sources, cleaning data, handling extensive big data operations and deploying novel models for multi-model data formats.
