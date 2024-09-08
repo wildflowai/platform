@@ -32,11 +32,6 @@
 
 **Note:** wildflow is in early development.
 
-<p align="center">
-  <a href="https://wildflow.ai/wildflowcoral.webm">Watch the wildflow coral video</a>
-</p>
-
-
 ### Empower biodiversity researchers with modern AI infrastructure!
 
 In today's landscape, biodiversity researchers must not only excel in understanding nature and addressing the biodiversity crisis, but they also need to master big data management. This includes building data pipelines, aggregating data from various sources, cleaning data, handling extensive big data operations and deploying novel models for multi-model data formats.
@@ -44,8 +39,6 @@ In today's landscape, biodiversity researchers must not only excel in understand
 ## What is [wildflow](https://wildflow.ai)?
 
 It's an open platform that specializes in multi-modal biodiversity data (eDNA, bioacoustics, computer vision, geospatial, manual observations / other ways of measuring biosphere) and uses AI to e.g. forecast coral bleaching events, predict harmful algae blooms, create marine protected areas, assess the impact of offshore wind farms, run biodiversity assessments for corporates and more.
-
-![wildflow](https://raw.githubusercontent.com/wildflowai/docs/main/src/assets/wildflow.svg)
 
 Our **current focus** on **time series geospatial biodiversity data** (observations of animals) and envirounmental data. Our goal is to enable in-depth study of marine **population dynamics** (also **ecological niche modelling** and other types of analysis) and provide essential **building blocks** to work on marine **biodiversity** applications.
 
