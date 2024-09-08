@@ -33,11 +33,9 @@
 **Note:** wildflow is in early development.
 
 <p align="center">
-  <video width="60%" controls>
-    <source src="https://wildflow.ai/wildflowcoral.webm" type="video/webm">
-    Your browser does not support the video tag.
-  </video>
+  <a href="https://wildflow.ai/wildflowcoral.webm">Watch the wildflow coral video</a>
 </p>
+
 
 ### Empower biodiversity researchers with modern AI infrastructure!
 
