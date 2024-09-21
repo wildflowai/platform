@@ -8,3 +8,4 @@ api/functions/.DS_Store
 graphql/target/
 graphql/bigquery-sa.json
 graphql/.env
+/3d/node_modules
