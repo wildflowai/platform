@@ -1,10 +1,11 @@
 // main.js
 import * as GaussianSplats3D from "@mkkellogg/gaussian-splats-3d";
 
+// Update the camera parameters with your desired values
 const viewer = new GaussianSplats3D.Viewer({
-  cameraUp: [0, -1, -0.6],
-  initialCameraPosition: [-1, -4, 6],
-  initialCameraLookAt: [0, 4, 0],
+  cameraUp: [0.24929, -0.2672, -0.93084],
+  initialCameraPosition: [-3.93951, 0.24631, -3.29199],
+  initialCameraLookAt: [-1.01181, 0.18365, 4.45069],
   rootElement: document.getElementById("viewer"),
 });
 
