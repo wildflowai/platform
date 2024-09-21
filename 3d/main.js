@@ -7,17 +7,21 @@ const viewer = new GaussianSplats3D.Viewer({
   initialCameraLookAt: [-1.01181, 0.18365, 4.45069],
   rootElement: document.getElementById("viewer"),
   sceneRevealMode: GaussianSplats3D.SceneRevealMode.Gradual,
+  crossOrigin: "anonymous",
 });
 
 viewer
-  .addSplatScene("/W32Em7/splats.ksplat", {
-    splatAlphaRemovalThreshold: 5,
-    showLoadingUI: true,
-    position: [0, 1, 0],
-    rotation: [0, 0, 0, 1],
-    scale: [1.5, 1.5, 1.5],
-    progressiveLoad: true,
-  })
+  .addSplatScene(
+    "https://storage.googleapis.com/wildflow/W32Em7/splats.ksplat",
+    {
+      splatAlphaRemovalThreshold: 5,
+      showLoadingUI: true,
+      position: [0, 1, 0],
+      rotation: [0, 0, 0, 1],
+      scale: [1.5, 1.5, 1.5],
+      progressiveLoad: true,
+    }
+  )
   .then(() => {
     viewer.start();
   });
