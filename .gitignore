@@ -9,3 +9,4 @@ graphql/target/
 graphql/bigquery-sa.json
 graphql/.env
 /3d/node_modules
+/3d/GaussianSplats3D/demo

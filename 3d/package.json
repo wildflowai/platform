@@ -1,23 +1,33 @@
 {
-  "name": "3d",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "wildflow-3d",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "dev": "vite --config vite.config.mjs",
-    "build": "vite build --config vite.config.mjs"
+    "dev": "next dev",
+    "build": "npm run build-lib && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "build-lib": "cd GaussianSplats3D && npm install && npm run build"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@mkkellogg/gaussian-splats-3d": "^0.4.5",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.12"
+    "@heroicons/react": "^2.1.5",
+    "next": "14.2.13",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-markdown": "^9.0.1",
+    "three": "^0.160.1",
+    "gaussian-splats-3d": "file:./GaussianSplats3D"
   },
   "devDependencies": {
-    "vite": "^5.4.7",
-    "vite-plugin-cross-origin-isolation": "^0.1.6"
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/three": "^0.160.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.13",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "typescript": "^5"
   }
 }
