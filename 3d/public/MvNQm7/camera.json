@@ -1,0 +1,8 @@
+{
+  "cameraUp": [0.01826, -0.31908, -0.94755],
+  "initialCameraPosition": [0.28392, 2.57945, -0.21423],
+  "initialCameraLookAt": [0.25371, 2.6312, 0.26042],
+  "position": [0, 1, 0],
+  "rotation": [0, 0, 0, 1],
+  "scale": [1.0, 1.0, 1.0]
+}

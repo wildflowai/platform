@@ -16,6 +16,8 @@ function createDebuggedViewer(options) {
   return new GaussianSplats3D.Viewer(options);
 }
 
+const _LOCAL_DATA = false;
+
 export default function Viewer3D({ modelId, onProgress }) {
   const viewerRef = useRef(null);
   const viewerInstanceRef = useRef(null);
@@ -30,45 +32,57 @@ export default function Viewer3D({ modelId, onProgress }) {
 
     const currentViewerRef = viewerRef.current;
 
-    const viewer = new GaussianSplats3D.Viewer({
-      cameraUp: [0.24929, -0.2672, -0.93084],
-      initialCameraPosition: [-3.93951, 0.24631, -3.29199],
-      initialCameraLookAt: [-1.01181, 0.18365, 4.45069],
-      rootElement: viewerRef.current,
-      sceneRevealMode: GaussianSplats3D.SceneRevealMode.Gradual,
-      crossOrigin: "anonymous",
-      threeScene: new THREE.Scene(),
-      selfDrivenMode: true,
-      useWorkers: true,
-      workerConfig: {
-        crossOriginIsolated: true,
-      },
-      progressCallback: (percent, message) => {
-        onProgress(percent, message);
-      },
-    });
+    const prefix = _LOCAL_DATA
+      ? `/${modelId}`
+      : `https://storage.googleapis.com/wildflow/${modelId}`;
+    const modelUrl = `${prefix}/splats.ksplat`;
+    const cameraUrl = `${prefix}/camera.json`;
 
-    viewerInstanceRef.current = viewer;
+    fetch(cameraUrl)
+      .then((response) => response.json())
+      .then((camera) => {
+        console.log(`Camera config: ${JSON.stringify(camera, null, 2)}`);
+        const viewer = new GaussianSplats3D.Viewer({
+          cameraUp: camera.cameraUp || [0.24929, -0.2672, -0.93084],
+          initialCameraPosition: camera.initialCameraPosition || [
+            -3.93951, 0.24631, -3.29199,
+          ],
+          initialCameraLookAt: camera.initialCameraLookAt || [
+            -1.01181, 0.18365, 4.45069,
+          ],
+          rootElement: viewerRef.current,
+          sceneRevealMode: GaussianSplats3D.SceneRevealMode.Gradual,
+          crossOrigin: "anonymous",
+          threeScene: new THREE.Scene(),
+          selfDrivenMode: true,
+          useWorkers: true,
+          workerConfig: {
+            crossOriginIsolated: true,
+          },
+          progressCallback: (percent, message) => {
+            onProgress(percent, message);
+          },
+        });
+        viewerInstanceRef.current = viewer;
 
-    // const modelUrl = `/splats.ksplat`
-    const modelUrl = `https://storage.googleapis.com/wildflow/${modelId}/splats.ksplat`;
-    viewer
-      .addSplatScene(modelUrl, {
-        splatAlphaRemovalThreshold: 5,
-        showLoadingUI: false,
-        position: [0, 1, 0],
-        rotation: [0, 0, 0, 1],
-        scale: [1.5, 1.5, 1.5],
-        progressiveLoad: true,
-      })
-      .then(() => {
-        console.log("Splat scene added successfully");
-        if (viewerInstanceRef.current) {
-          viewerInstanceRef.current.start();
-        }
-      })
-      .catch((error) => {
-        console.error("Error adding splat scene:", error);
+        viewer
+          .addSplatScene(modelUrl, {
+            splatAlphaRemovalThreshold: 5,
+            showLoadingUI: false,
+            position: camera.position || [0, 1, 0],
+            rotation: camera.rotation || [0, 0, 0, 1],
+            scale: camera.scale || [1.5, 1.5, 1.5],
+            progressiveLoad: true,
+          })
+          .then(() => {
+            console.log("Splat scene added successfully");
+            if (viewerInstanceRef.current) {
+              viewerInstanceRef.current.start();
+            }
+          })
+          .catch((error) => {
+            console.error("Error adding splat scene:", error);
+          });
       });
 
     return () => {

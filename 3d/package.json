@@ -11,12 +11,21 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.1.5",
-    "next": "14.2.13",
+    "@types/plotly.js": "^2.33.4",
+    "@types/xml2js": "^0.4.14",
+    "chart.js": "^4.4.5",
+    "chartjs-plugin-zoom": "^2.0.1",
+    "gaussian-splats-3d": "file:./GaussianSplats3D",
+    "next": "^14.2.13",
+    "plotly.js": "^2.35.2",
     "react": "^18",
+    "react-chartjs-2": "^5.2.0",
     "react-dom": "^18",
+    "react-dropzone": "^14.2.10",
     "react-markdown": "^9.0.1",
+    "react-plotly.js": "^2.6.0",
     "three": "^0.160.1",
-    "gaussian-splats-3d": "file:./GaussianSplats3D"
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@types/node": "^20",
